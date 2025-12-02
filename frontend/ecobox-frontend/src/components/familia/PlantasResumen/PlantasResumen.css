@@ -1,0 +1,94 @@
+/* src/components/familia/PlantasResumen/PlantasResumen.css */
+.plantas-resumen {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.plantas-resumen__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.plantas-resumen__header h4 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2d3748;
+  margin: 0;
+}
+
+.plantas-resumen__estado {
+  font-size: 0.875rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.plantas-resumen__stats {
+  margin-bottom: 1rem;
+}
+
+.plantas-resumen__stat {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.plantas-resumen__stat-number {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #2d3748;
+  display: block;
+  line-height: 1;
+}
+
+.plantas-resumen__stat-label {
+  font-size: 0.875rem;
+  color: #718096;
+  margin-top: 0.25rem;
+}
+
+.plantas-resumen__details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.plantas-resumen__detail {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #4a5568;
+}
+
+.plantas-resumen__detail-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.plantas-resumen__footer {
+  border-top: 1px solid #e2e8f0;
+  padding-top: 0.75rem;
+}
+
+.plantas-resumen__link {
+  color: #4299e1;
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.plantas-resumen__link:hover {
+  color: #3182ce;
+  text-decoration: underline;
+}

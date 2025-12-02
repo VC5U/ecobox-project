@@ -1,0 +1,265 @@
+/* src/index.css - VERSIÓN CORREGIDA CON TEMA VERDE */
+
+:root {
+  /* Colores base - Tema verde */
+  --font-size: 16px;
+  
+  /* Fondos */
+  --background: linear-gradient(135deg, #2e7d32, #4caf50);;
+  --background-gradient: linear-gradient(135deg, #f5f7fa 0%, #daf0c2 100%);
+  --header-gradient: linear-gradient(135deg, #2e7d32 0%, #4caf50 100%);
+  
+  /* Textos */
+  --foreground: #1a1a1a;
+  --card-foreground: #1a1a1a;
+  --popover-foreground: #1a1a1a;
+  
+  /* Superficies */
+  --card: #ffffff;
+  --popover: #ffffff;
+  
+  /* Colores principales */
+  --primary: #2e7d32;
+  --primary-foreground: #ffffff;
+  --primary-light: #4caf50;
+  --primary-dark: #1b5e20;
+  
+  /* Colores secundarios */
+  --secondary: #e8f5e8;
+  --secondary-foreground: #1a1a1a;
+  
+  /* Estados */
+  --muted: #f5f5f5;
+  --muted-foreground: #666666;
+  --accent: #e8f5e8;
+  --accent-foreground: #1a1a1a;
+  --destructive: #d4183d;
+  --destructive-foreground: #ffffff;
+  
+  /* Bordes e inputs */
+  --border: rgba(0, 0, 0, 0.1);
+  --input: #ffffff;
+  --input-background: #f8f9fa;
+  --switch-background: #cbced4;
+  
+  /* Tipografía */
+  --font-weight-medium: 500;
+  --font-weight-normal: 400;
+  
+  /* Efectos */
+  --ring: rgba(46, 125, 50, 0.3);
+  
+  /* Charts */
+  --chart-1: #2e7d32;
+  --chart-2: #4caf50;
+  --chart-3: #81c784;
+  --chart-4: #a5d6a7;
+  --chart-5: #c8e6c9;
+  
+  /* Border radius */
+  --radius: 0.625rem;
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  
+  /* Sidebar (si lo usas) */
+  --sidebar: #f8f9fa;
+  --sidebar-foreground: #1a1a1a;
+  --sidebar-primary: #2e7d32;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e8f5e8;
+  --sidebar-accent-foreground: #1a1a1a;
+  --sidebar-border: #e0e0e0;
+  --sidebar-ring: rgba(46, 125, 50, 0.3);
+}
+
+/* Dark Mode - Manteniendo el tema verde pero más oscuro */
+.dark {
+  /* Fondos */
+  --background: #0a0f0a;
+  --background-gradient: linear-gradient(135deg, #0a0f0a 0%, #1a2a1a 100%);
+  --header-gradient: linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%);
+  
+  /* Textos */
+  --foreground: #ffffff;
+  --card-foreground: #ffffff;
+  --popover-foreground: #ffffff;
+  
+  /* Superficies */
+  --card: #152015;
+  --popover: #152015;
+  
+  /* Colores principales */
+  --primary: #4caf50;
+  --primary-foreground: #0a0f0a;
+  --primary-light: #81c784;
+  --primary-dark: #2e7d32;
+  
+  /* Colores secundarios */
+  --secondary: #1a2a1a;
+  --secondary-foreground: #ffffff;
+  
+  /* Estados */
+  --muted: #1a2a1a;
+  --muted-foreground: #a0a0a0;
+  --accent: #1a2a1a;
+  --accent-foreground: #ffffff;
+  --destructive: #e53935;
+  --destructive-foreground: #ffffff;
+  
+  /* Bordes e inputs */
+  --border: rgba(255, 255, 255, 0.1);
+  --input: #152015;
+  --input-background: #1a2a1a;
+  --switch-background: #4caf50;
+  
+  /* Efectos */
+  --ring: rgba(76, 175, 80, 0.4);
+  
+  /* Charts */
+  --chart-1: #4caf50;
+  --chart-2: #81c784;
+  --chart-3: #a5d6a7;
+  --chart-4: #c8e6c9;
+  --chart-5: #e8f5e9;
+  
+  /* Sidebar */
+  --sidebar: #152015;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #4caf50;
+  --sidebar-primary-foreground: #0a0f0a;
+  --sidebar-accent: #1a2a1a;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgba(255, 255, 255, 0.1);
+  --sidebar-ring: rgba(76, 175, 80, 0.4);
+}
+
+/* Estilos base */
+* {
+  box-sizing: border-box;
+  border-color: var(--border);
+}
+
+*:focus {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: var(--background-gradient);
+  color: var(--foreground);
+  font-size: var(--font-size);
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+/* Tipografía base */
+h1 {
+  font-size: 1.5rem;
+  font-weight: var(--font-weight-medium);
+  line-height: 1.5;
+  margin: 0 0 1rem 0;
+}
+
+h2 {
+  font-size: 1.25rem;
+  font-weight: var(--font-weight-medium);
+  line-height: 1.5;
+  margin: 0 0 0.75rem 0;
+}
+
+h3 {
+  font-size: 1.125rem;
+  font-weight: var(--font-weight-medium);
+  line-height: 1.5;
+  margin: 0 0 0.5rem 0;
+}
+
+h4 {
+  font-size: 1rem;
+  font-weight: var(--font-weight-medium);
+  line-height: 1.5;
+  margin: 0 0 0.5rem 0;
+}
+
+p {
+  font-size: 1rem;
+  font-weight: var(--font-weight-normal);
+  line-height: 1.5;
+  margin: 0 0 1rem 0;
+}
+
+label {
+  font-size: 0.875rem;
+  font-weight: var(--font-weight-medium);
+  line-height: 1.5;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+button {
+  font-size: 1rem;
+  font-weight: var(--font-weight-medium);
+  line-height: 1.5;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+input, textarea, select {
+  font-size: 1rem;
+  font-weight: var(--font-weight-normal);
+  line-height: 1.5;
+  border: 1px solid var(--border);
+  background: var(--input-background);
+  color: var(--foreground);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.75rem;
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: 2px solid var(--ring);
+  border-color: var(--primary);
+}
+
+html {
+  font-size: var(--font-size);
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+  background: var(--muted);
+  padding: 0.2rem 0.4rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.875em;
+}
+/* Agrega esto en tu src/index.css */
+* {
+  box-sizing: border-box;
+}
+
+/* Estilos específicos para inputs */
+input, textarea, select {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Prevenir zoom en iOS */
+@media screen and (max-width: 768px) {
+  input, textarea, select {
+    font-size: 16px; /* Previene zoom en iOS */
+  }
+}
+
+
+
+/* src/index.css - VERSIÓN CORREGIDA CON TEMA VERDE */

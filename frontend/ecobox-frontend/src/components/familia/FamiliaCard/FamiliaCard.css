@@ -1,0 +1,71 @@
+/* Actualizar el CSS de FamiliaCard */
+.familia-card__stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.familia-card__stat-icon {
+  margin-bottom: 0.25rem;
+  color: #718096;
+}
+
+.familia-card__stat-number {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #2d3748;
+  line-height: 1;
+}
+
+.familia-card__stat-label {
+  font-size: 0.8rem;
+  color: #718096;
+  margin-top: 0.25rem;
+}
+
+.familia-card__footer {
+  border-top: 1px solid #e2e8f0;
+  padding-top: 0.75rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.familia-card__codigo {
+  font-size: 0.75rem;
+  color: #718096;
+  font-family: monospace;
+  background: #f7fafc;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+}
+
+.familia-card__fecha {
+  font-size: 0.7rem;
+  color: #a0aec0;
+}
+
+.familia-card__admin-badge,
+.familia-card__selected-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.7rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.familia-card__admin-badge {
+  background: #48bb78;
+  color: white;
+}
+
+.familia-card__selected-badge {
+  background: #4299e1;
+  color: white;
+}

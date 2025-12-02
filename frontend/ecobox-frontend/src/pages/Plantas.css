@@ -1,0 +1,148 @@
+.plantas {
+  padding: 1rem 0;
+}
+
+.plantas-header {
+  margin-bottom: 2rem;
+}
+
+.plantas-header h1 {
+  color: #2e7d32;
+  margin: 0 0 0.5rem 0;
+  font-size: 2rem;
+}
+
+.plantas-header p {
+  color: #666;
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.plantas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.planta-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  border: 1px solid #e0e0e0;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.planta-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.planta-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.planta-header h3 {
+  margin: 0;
+  color: #2e7d32;
+  font-size: 1.2rem;
+}
+
+.planta-status {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.planta-status.Saludable {
+  background: #e8f5e8;
+  color: #2e7d32;
+}
+
+.planta-status.Necesita_Agua {
+  background: #fff3e0;
+  color: #ff9800;
+}
+
+.planta-status.Critica {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.planta-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.planta-detail {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.planta-detail .label {
+  color: #666;
+  font-weight: 500;
+}
+
+.planta-detail .warning {
+  color: #ff9800;
+  font-weight: bold;
+}
+
+.planta-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.btn-primary {
+  background: #4caf50;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  flex: 1;
+}
+
+.btn-primary:hover {
+  background: #45a049;
+}
+
+.btn-secondary {
+  background: #e0e0e0;
+  color: #333;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  flex: 1;
+}
+
+.btn-secondary:hover {
+  background: #d5d5d5;
+}
+
+.plantas-loading,
+.plantas-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  color: #666;
+  text-align: center;
+}
+
+.plantas-empty {
+  background: #f5f5f5;
+  border-radius: 8px;
+  border: 2px dashed #e0e0e0;
+}
