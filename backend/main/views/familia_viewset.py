@@ -7,8 +7,10 @@ from django.db import transaction
 from django.shortcuts import get_object_or_404
 import secrets
 import string
+import logging
+logger = logging.getLogger(__name__)
 
-from ..models import Familia, FamiliaUsuario, Usuario
+from ..models import Familia, FamiliaUsuario, Usuario, Rol  # <- AGREGAR Rol aquí
 from ..serializers.familia_serializer import (
     FamiliaSerializer, 
     CrearFamiliaSerializer, 
@@ -19,7 +21,7 @@ from ..serializers.familia_serializer import (
 class FamiliaViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     serializer_class = FamiliaSerializer
-    queryset = Familia.objects.all()  # <- AGREGA ESTA LÍNEA
+    queryset = Familia.objects.all()
 
     def get_queryset(self):
         """Retorna solo las familias del usuario actual"""
@@ -30,7 +32,7 @@ class FamiliaViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['post'])
     def crear_familia(self, request):
-        """Crear nueva familia y asignar usuario como administrador"""
+        """Crear nueva familia y asignar usuario como administrador - CORREGIDO"""
         serializer = CrearFamiliaSerializer(data=request.data)
         
         if not serializer.is_valid():
@@ -52,10 +54,15 @@ class FamiliaViewSet(viewsets.ModelViewSet):
                     cantidad_plantas=0
                 )
                 
-                # Asignar usuario como administrador
+                # SOLUCIÓN: Asignar rol "Administrador" (ID: 1)
+                rol_admin = Rol.objects.get(id=1)  # Rol "Administrador"
+                print(f"🎯 Asignando rol admin: {rol_admin.nombre}")
+                
+                # Asignar usuario como administrador CON ROL
                 FamiliaUsuario.objects.create(
                     familia=familia,
                     usuario=request.user,
+                    rol=rol_admin,  # <- AGREGAR ROL
                     es_administrador=True,
                     activo=True
                 )
@@ -70,14 +77,15 @@ class FamiliaViewSet(viewsets.ModelViewSet):
                 }, status=status.HTTP_201_CREATED)
                 
         except Exception as e:
+            print(f"❌ Error creando familia: {str(e)}")
             return Response({
                 'success': False,
-                'error': 'Error al crear la familia'
+                'error': f'Error al crear la familia: {str(e)}'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     @action(detail=False, methods=['post'])
     def unirse_familia(self, request):
-        """Unirse a una familia usando código de invitación"""
+        """Unirse a una familia usando código de invitación - VERSIÓN CORREGIDA"""
         serializer = UnirseFamiliaSerializer(data=request.data)
         
         if not serializer.is_valid():
@@ -89,28 +97,39 @@ class FamiliaViewSet(viewsets.ModelViewSet):
         
         try:
             codigo = serializer.validated_data['codigo_invitacion']
-            familia = Familia.objects.get(codigo_invitacion=codigo)
+            print(f"🔍 Buscando familia con código: {codigo}")
             
-            # Verificar si el usuario ya es miembro activo
-            membresia_existente = FamiliaUsuario.objects.filter(
+            # Buscar familia
+            familia = Familia.objects.get(codigo_invitacion=codigo)
+            print(f"✅ Familia encontrada: {familia.nombre} (ID: {familia.id})")
+            
+            # Verificar si ya es miembro
+            if FamiliaUsuario.objects.filter(
                 familia=familia,
                 usuario=request.user,
                 activo=True
-            ).exists()
-            
-            if membresia_existente:
+            ).exists():
                 return Response({
                     'success': False,
                     'error': 'Ya eres miembro de esta familia'
                 }, status=status.HTTP_400_BAD_REQUEST)
             
-            # Crear nueva membresía
-            FamiliaUsuario.objects.create(
+            print(f"👤 Creando membresía para usuario: {request.user.id}")
+            
+            # SOLUCIÓN: Asignar rol "Miembro" (ID: 2)
+            rol_miembro = Rol.objects.get(id=2)  # Rol "Miembro"
+            print(f"🎯 Asignando rol: {rol_miembro.nombre}")
+            
+            # Crear membresía CON el campo rol
+            nueva_membresia = FamiliaUsuario.objects.create(
                 familia=familia,
                 usuario=request.user,
-                es_administrador=False,  # Nuevos miembros no son administradores
+                rol=rol_miembro,  # <- ESTE ERA EL PROBLEMA
+                es_administrador=False,
                 activo=True
             )
+            
+            print(f"✅ Membresía creada exitosamente: {nueva_membresia.id}")
             
             # Serializar la familia para la respuesta
             familia_data = FamiliaSerializer(familia, context={'request': request}).data
@@ -122,15 +141,88 @@ class FamiliaViewSet(viewsets.ModelViewSet):
             })
             
         except Familia.DoesNotExist:
+            print(f"❌ Código no encontrado: {codigo}")
             return Response({
                 'success': False,
                 'error': 'Código de invitación inválido'
             }, status=status.HTTP_404_NOT_FOUND)
             
         except Exception as e:
+            print(f"💥 ERROR CRÍTICO: {str(e)}")
+            import traceback
+            print(f"💥 TRACEBACK: {traceback.format_exc()}")
+            
             return Response({
                 'success': False,
-                'error': 'Error al unirse a la familia'
+                'error': f'Error del servidor: {str(e)}'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    @action(detail=True, methods=['post'])
+    def agregar_miembro(self, request, pk=None):
+        """Agregar miembro a la familia - CORREGIDO"""
+        try:
+            familia = self.get_object()
+            print(f"👥 Agregando miembro a familia: {familia.nombre}")
+            
+            usuario_id = request.data.get('usuario_id')
+            es_administrador = request.data.get('es_administrador', False)
+            
+            if not usuario_id:
+                return Response({
+                    'success': False,
+                    'error': 'ID de usuario requerido'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Buscar usuario
+            usuario = Usuario.objects.get(id=usuario_id)
+            print(f"👤 Usuario a agregar: {usuario.email}")
+            
+            # Verificar si ya es miembro
+            membresia_existente = FamiliaUsuario.objects.filter(
+                familia=familia,
+                usuario=usuario,
+                activo=True
+            ).first()
+            
+            if membresia_existente:
+                return Response({
+                    'success': False,
+                    'error': 'El usuario ya es miembro de esta familia'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # SOLUCIÓN: Asignar rol según si es admin o no
+            if es_administrador:
+                rol = Rol.objects.get(id=1)  # Administrador
+            else:
+                rol = Rol.objects.get(id=2)  # Miembro
+            
+            # Crear membresía CON ROL
+            nueva_membresia = FamiliaUsuario.objects.create(
+                familia=familia,
+                usuario=usuario,
+                rol=rol,  # <- AGREGAR ROL
+                es_administrador=es_administrador,
+                activo=True
+            )
+            
+            print(f"✅ Miembro agregado: {usuario.email} a {familia.nombre} como {rol.nombre}")
+            
+            return Response({
+                'success': True,
+                'mensaje': 'Miembro agregado exitosamente',
+                'membresia_id': nueva_membresia.id
+            })
+            
+        except Usuario.DoesNotExist:
+            return Response({
+                'success': False,
+                'error': 'Usuario no encontrado'
+            }, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            print(f"❌ Error agregando miembro: {str(e)}")
+            return Response({
+                'success': False,
+                'error': f'Error al agregar miembro: {str(e)}'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     @action(detail=True, methods=['post'])
