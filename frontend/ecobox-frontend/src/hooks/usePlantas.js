@@ -5,73 +5,49 @@ import { plantasService } from '../services/plantasService';
 export const usePlantas = () => {
   const [plantas, setPlantas] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
+ // Cambia esto:
+useEffect(() => {
+  const cargarPlantas = async () => {
+    const data = await plantasService.getPlantas();
+    setPlantas(data);
+  };
+  cargarPlantas();
+}, []);
+
+// Por esto:
+useEffect(() => {
   const cargarPlantas = async () => {
     try {
-      setLoading(true);
-      setError(null);
-      const datosPlantas = await plantasService.getPlantas();
-      setPlantas(datosPlantas);
-    } catch (err) {
-      setError('Error al cargar las plantas');
-      console.error('Error:', err);
-    } finally {
-      setLoading(false);
+      // Usar el NUEVO endpoint que filtra por activo=True
+      const data = await plantasService.getMisPlantas();
+      setPlantas(data);
+      console.log(`🌿 Plantas cargadas: ${data.length}`);
+    } catch (error) {
+      console.error('Error cargando plantas:', error);
     }
   };
-
-  useEffect(() => {
-    cargarPlantas();
-  }, []);
+  cargarPlantas();
+}, []);
 
   const agregarPlanta = async (plantaData) => {
-    try {
-      setError(null);
-      const nuevaPlanta = await plantasService.crearPlanta(plantaData);
-      setPlantas(prev => [...prev, nuevaPlanta]);
-      return nuevaPlanta;
-    } catch (err) {
-      setError('Error al crear la planta');
-      throw err;
-    }
+    const nuevaPlanta = await plantasService.crearPlanta(plantaData);
+    setPlantas([...plantas, nuevaPlanta]);
+    return nuevaPlanta;
   };
 
   const actualizarPlanta = async (id, plantaData) => {
-    try {
-      setError(null);
-      const plantaActualizada = await plantasService.actualizarPlanta(id, plantaData);
-      setPlantas(prev => prev.map(planta => 
-        planta.idPlanta === id ? plantaActualizada : planta
-      ));
-      return plantaActualizada;
-    } catch (err) {
-      setError('Error al actualizar la planta');
-      throw err;
-    }
+    const plantaActualizada = await plantasService.actualizarPlanta(id, plantaData);
+    setPlantas(plantas.map(p => p.id === id ? plantaActualizada : p));
+    return plantaActualizada;
   };
 
-  const eliminarPlanta = async (id) => {
-    try {
-      setError(null);
-      const resultado = await plantasService.eliminarPlanta(id);
-      if (resultado) {
-        setPlantas(prev => prev.filter(planta => planta.idPlanta !== id));
-      }
-      return resultado;
-    } catch (err) {
-      setError('Error al eliminar la planta');
-      throw err;
-    }
+  const recargarPlantas = async () => {
+    setLoading(true);
+    const data = await plantasService.getPlantas();
+    setPlantas(data);
+    setLoading(false);
   };
 
-  return {
-    plantas,
-    loading,
-    error,
-    agregarPlanta,
-    actualizarPlanta,
-    eliminarPlanta,
-    recargarPlantas: cargarPlantas
-  };
+  return { plantas, loading, agregarPlanta, actualizarPlanta, recargarPlantas };
 };

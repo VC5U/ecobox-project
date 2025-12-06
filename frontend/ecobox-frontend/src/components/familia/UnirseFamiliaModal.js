@@ -1,5 +1,6 @@
-// src/components/familia/UnirseFamiliaModal.js - VERSIÓN MEJORADA
+// src/components/familia/UnirseFamiliaModal.js
 import React, { useState } from 'react';
+import './Familia.css'; // Importar el CSS principal
 
 const UnirseFamiliaModal = ({ show, onClose, onConfirm, loading }) => {
   const [codigoInvitacion, setCodigoInvitacion] = useState('');
@@ -10,6 +11,11 @@ const UnirseFamiliaModal = ({ show, onClose, onConfirm, loading }) => {
     
     if (!codigoInvitacion.trim()) {
       setError('Por favor ingresa un código de invitación');
+      return;
+    }
+
+    if (codigoInvitacion.trim().length < 3) {
+      setError('El código debe tener al menos 3 caracteres');
       return;
     }
 
@@ -48,6 +54,7 @@ const UnirseFamiliaModal = ({ show, onClose, onConfirm, loading }) => {
               placeholder="Ej: INV123ABC"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               disabled={loading}
+              maxLength={20}
             />
             <p className="text-sm text-gray-500 mt-1">
               Pide el código de invitación al administrador de la familia
@@ -78,6 +85,16 @@ const UnirseFamiliaModal = ({ show, onClose, onConfirm, loading }) => {
             </button>
           </div>
         </form>
+
+        <div className="mt-6 p-4 bg-green-50 rounded-lg">
+          <h3 className="font-medium text-green-800 mb-2">🔍 ¿Dónde encuentro el código?</h3>
+          <ul className="text-sm text-green-700 space-y-1">
+            <li>• Pídele al administrador de la familia</li>
+            <li>• El código tiene 8 caracteres (ej: INV123AB)</li>
+            <li>• Es sensible a mayúsculas/minúsculas</li>
+            <li>• No incluye espacios ni caracteres especiales</li>
+          </ul>
+        </div>
       </div>
     </div>
   );

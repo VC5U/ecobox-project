@@ -45,3 +45,30 @@ class PlantaViewSet(viewsets.ModelViewSet):
                     estadisticas['promedio_humedad'] = float(avg)
         
         return Response(estadisticas)
+    # ===== NUEVO ENDPOINT - NO AFECTA LO EXISTENTE =====
+    @action(detail=False, methods=['get'])
+    def mis_plantas(self, request):
+        """
+        Plantas SOLO de familias donde el usuario es miembro ACTIVO
+        Endpoint: GET /api/plantas/mis_plantas/
+        """
+        try:
+            # Filtrar por miembros ACTIVOS (activo=True)
+            plantas = Planta.objects.filter(
+                familia__miembros__usuario=request.user,
+                familia__miembros__activo=True
+            ).distinct()
+            
+            # Opcional: agregar paginación
+            page = self.paginate_queryset(plantas)
+            if page is not None:
+                serializer = self.get_serializer(page, many=True)
+                return self.get_paginated_response(serializer.data)
+            
+            serializer = self.get_serializer(plantas, many=True)
+            return Response(serializer.data)
+            
+        except Exception as e:
+            return Response({
+                'error': f'Error obteniendo plantas: {str(e)}'
+            }, status=500)

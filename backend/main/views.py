@@ -54,7 +54,8 @@ class FamiliaViewSet(viewsets.ModelViewSet):
         
         FamiliaUsuario.objects.create(familia=familia, usuario=usuario)
         return Response({'message': 'Te has unido a la familia exitosamente'})
-
+    
+    
 class PlantaViewSet(viewsets.ModelViewSet):
     queryset = Planta.objects.all()
     serializer_class = PlantaSerializer

@@ -21,7 +21,19 @@ const PlantsManager = () => {
   };
 
   const handleViewPlant = (plant) => {
-    setSelectedPlant(plant);
+    console.log("👁️ Planta seleccionada:", plant);
+    
+    // IMPORTANTE: La API devuelve idPlanta, usarlo como ID
+    const plantId = plant.idPlanta || plant.id;
+    console.log("👁️ ID a usar:", plantId);
+    
+    if (!plantId) {
+      console.error("❌ No se encontró ID en la planta");
+      return;
+    }
+    
+    // Guardar la planta con el ID correcto
+    setSelectedPlant({ ...plant, id: plantId, idPlanta: plantId });
     setCurrentView('detail');
   };
 
@@ -48,7 +60,7 @@ const PlantsManager = () => {
     <div className="plants-manager">
       {currentView === 'list' && (
         <PlantList 
-          plantas={plantas} // ¡Falta esta prop!
+          plantas={plantas}
           onAddPlant={handleAddPlant}
           onSelectPlant={handleViewPlant}
         />
@@ -56,15 +68,15 @@ const PlantsManager = () => {
       
       {currentView === 'form' && (
         <PlantForm
-          plantaExistente={selectedPlant} // Cambiado de "planta" a "plantaExistente"
-          onSubmit={handleSavePlant} // Cambiado de "onSave" a "onSubmit"
+          plantaExistente={selectedPlant}
+          onSubmit={handleSavePlant}
           onCancel={handleBackToList}
         />
       )}
       
       {currentView === 'detail' && selectedPlant && (
         <PlantDetail
-          plant={selectedPlant} // Cambiado de "plantId" a "plant"
+          plantId={selectedPlant.idPlanta || selectedPlant.id}
           onEdit={() => handleEditPlant(selectedPlant)}
           onBack={handleBackToList}
         />

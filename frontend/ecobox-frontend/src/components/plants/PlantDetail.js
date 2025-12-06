@@ -1,36 +1,108 @@
 // src/components/plants/PlantDetail.js
-import React, { useState, useEffect } from 'react';
-import { plantasService, sensoresService } from '../../services/plantasService';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { plantasService } from '../../services/plantasService';
 import './PlantDetail.css';
 
-const PlantDetail = ({ plantId, onEdit, onBack }) => {
+const PlantDetail = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
   const [planta, setPlanta] = useState(null);
   const [sensores, setSensores] = useState([]);
   const [configuracion, setConfiguracion] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
-  useEffect(() => {
-    cargarDatosPlanta();
-  }, [plantId]);
+  const cargarDatosPlanta = useCallback(async () => {
+    console.log("🚀 cargarDatosPlanta iniciando...");
+    console.log("🔍 ID de la URL (useParams):", id);
+    
+    if (!id || id === "undefined") {
+      console.error("❌ ID de planta no válido desde URL");
+      setLoading(false);
+      return;
+    }
 
-  const cargarDatosPlanta = async () => {
     try {
       setLoading(true);
+      
+      const idNumerico = parseInt(id);
+      if (isNaN(idNumerico)) {
+        throw new Error("ID de la URL no es un número válido");
+      }
+      
+      console.log("🔢 Cargando datos para planta ID:", idNumerico);
+      
       const [plantaData, sensoresData, configData] = await Promise.all([
-        plantasService.getPlanta(plantId),
-        plantasService.getSensoresPlanta(plantId),
-        plantasService.getConfiguracionPlanta(plantId)
+        plantasService.getPlanta(idNumerico),
+        plantasService.getSensoresPlanta(idNumerico),
+        plantasService.getConfiguracionPlanta(idNumerico)
       ]);
-
+      
+      console.log("✅ Datos cargados exitosamente");
       setPlanta(plantaData);
-      setSensores(sensoresData);
+      setSensores(sensoresData || []);
       setConfiguracion(configData);
+      
     } catch (error) {
-      console.error('Error cargando datos de planta:', error);
+      console.error('❌ Error cargando datos:', error);
+      const plantaDemo = demoData.plantas.find(p => p.id === parseInt(id)) || demoData.plantas[0];
+      setPlanta(plantaDemo);
+      setSensores(demoData.sensores.filter(s => s.idPlanta === parseInt(id)));
+      setConfiguracion(demoData.configuraciones?.find(c => c.idPlanta === parseInt(id)));
     } finally {
       setLoading(false);
     }
+  }, [id]);
+
+  useEffect(() => {
+    if (id) {
+      cargarDatosPlanta();
+    }
+  }, [id, cargarDatosPlanta]);
+
+  const handleBack = () => {
+    navigate('/plantas');
+  };
+
+  const handleEdit = () => {
+    navigate(`/plantas/${id}/editar`);
+  };
+
+  const handleDeleteClick = () => {
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    setDeleting(true);
+    
+    try {
+      console.log(`🗑️ Eliminando planta ID: ${id}`);
+      const resultado = await plantasService.eliminarPlanta(id);
+      
+      console.log("✅ Resultado de eliminación:", resultado);
+      
+      if (resultado.success) {
+        alert(`✅ ${resultado.message}`);
+        navigate('/plantas');
+      } else {
+        alert(`❌ ${resultado.message}`);
+        setShowDeleteModal(false);
+      }
+      
+    } catch (error) {
+      console.error('❌ Error eliminando planta:', error);
+      alert('❌ Error al eliminar la planta. Intenta nuevamente.');
+      setShowDeleteModal(false);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setShowDeleteModal(false);
   };
 
   const getStatusInfo = (estado) => {
@@ -59,7 +131,7 @@ const PlantDetail = ({ plantId, onEdit, onBack }) => {
     return (
       <div className="loading-container">
         <div className="spinner"></div>
-        <p>Cargando información de la planta...</p>
+        <p>Cargando información de la planta ID: {id}...</p>
       </div>
     );
   }
@@ -67,10 +139,16 @@ const PlantDetail = ({ plantId, onEdit, onBack }) => {
   if (!planta) {
     return (
       <div className="error-container">
-        <h3>Planta no encontrada</h3>
-        <button onClick={onBack} className="btn btn-secondary">
-          Volver a la lista
-        </button>
+        <h3>🌿 Planta no encontrada</h3>
+        <p>No se encontró una planta con el ID: <strong>{id || 'No especificado'}</strong></p>
+        <div className="error-actions">
+          <button onClick={handleBack} className="btn btn-primary">
+            ← Volver a la lista
+          </button>
+          <button onClick={() => navigate('/plantas/nueva')} className="btn btn-secondary">
+            + Crear nueva planta
+          </button>
+        </div>
       </div>
     );
   }
@@ -79,14 +157,80 @@ const PlantDetail = ({ plantId, onEdit, onBack }) => {
 
   return (
     <div className="plant-detail">
+      {/* Modal de confirmación de eliminación */}
+      {showDeleteModal && (
+        <div className="modal-overlay">
+          <div className="modal delete-modal">
+            <div className="modal-header">
+              <h3>🗑️ Eliminar Planta</h3>
+              <button 
+                onClick={handleDeleteCancel}
+                className="modal-close"
+                disabled={deleting}
+              >
+                ×
+              </button>
+            </div>
+            
+            <div className="modal-body">
+              <div className="delete-warning">
+                <div className="warning-icon">⚠️</div>
+                <h4>¿Estás seguro de que quieres eliminar esta planta?</h4>
+                <p>
+                  <strong>{planta.nombrePersonalizado}</strong> (ID: {id})
+                </p>
+                <p className="warning-text">
+                  Esta acción no se puede deshacer. Se eliminarán todos los datos 
+                  asociados a esta planta, incluyendo sensores y registros.
+                </p>
+                
+                {sensores.length > 0 && (
+                  <div className="sensors-warning">
+                    <p>📡 <strong>Atención:</strong> Esta planta tiene {sensores.length} sensor(es) asociado(s).</p>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            <div className="modal-actions">
+              <button 
+                onClick={handleDeleteCancel}
+                className="btn btn-secondary"
+                disabled={deleting}
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={handleDeleteConfirm}
+                className="btn btn-danger"
+                disabled={deleting}
+              >
+                {deleting ? (
+                  <>
+                    <span className="spinner-small"></span>
+                    Eliminando...
+                  </>
+                ) : 'Sí, eliminar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="plant-detail-header">
-        <button onClick={onBack} className="back-button">
-          ← Volver
+        <button onClick={handleBack} className="back-button">
+          ← Volver a Mis Plantas
         </button>
         <div className="header-actions">
-          <button onClick={onEdit} className="btn btn-secondary">
-            Editar
+          <button onClick={handleEdit} className="btn btn-secondary">
+            ✏️ Editar Planta
+          </button>
+          <button 
+            onClick={handleDeleteClick} 
+            className="btn btn-danger"
+          >
+            🗑️ Eliminar
           </button>
         </div>
       </div>
@@ -99,6 +243,7 @@ const PlantDetail = ({ plantId, onEdit, onBack }) => {
           ) : (
             <div className="plant-image-placeholder">
               <span className="placeholder-icon">🌿</span>
+              <span className="placeholder-text">Sin imagen</span>
             </div>
           )}
           <div className="plant-status-badge" style={{ backgroundColor: statusInfo.color }}>
@@ -108,8 +253,14 @@ const PlantDetail = ({ plantId, onEdit, onBack }) => {
         </div>
 
         <div className="plant-info">
-          <h1 className="plant-name">{planta.nombrePersonalizado}</h1>
-          <p className="plant-description">{planta.descripcion}</p>
+          <div className="plant-title-section">
+            <h1 className="plant-name">{planta.nombrePersonalizado}</h1>
+            <span className="plant-id-badge">ID: {id}</span>
+          </div>
+          <p className="plant-scientific-name">
+            {planta.especie || 'Especie no especificada'}
+          </p>
+          <p className="plant-description">{planta.descripcion || 'Sin descripción disponible'}</p>
           
           <div className="plant-meta-grid">
             <div className="meta-item">
@@ -119,12 +270,20 @@ const PlantDetail = ({ plantId, onEdit, onBack }) => {
             <div className="meta-item">
               <span className="meta-label">Fecha de creación</span>
               <span className="meta-value">
-                {new Date(planta.fecha_creacion).toLocaleDateString()}
+                {new Date(planta.fecha_creacion).toLocaleDateString('es-ES', {
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric'
+                })}
               </span>
             </div>
             <div className="meta-item">
               <span className="meta-label">Sensores activos</span>
               <span className="meta-value">{sensores.length}</span>
+            </div>
+            <div className="meta-item">
+              <span className="meta-label">Familia</span>
+              <span className="meta-value">{planta.familia || 'No especificada'}</span>
             </div>
           </div>
         </div>
@@ -142,7 +301,7 @@ const PlantDetail = ({ plantId, onEdit, onBack }) => {
           className={`tab-button ${activeTab === 'sensors' ? 'active' : ''}`}
           onClick={() => setActiveTab('sensors')}
         >
-          📡 Sensores
+          📡 Sensores ({sensores.length})
         </button>
         <button 
           className={`tab-button ${activeTab === 'config' ? 'active' : ''}`}
@@ -169,12 +328,25 @@ const PlantDetail = ({ plantId, onEdit, onBack }) => {
         )}
         
         {activeTab === 'config' && (
-          <ConfigTab configuracion={configuracion} plantaId={plantId} />
+          <ConfigTab configuracion={configuracion} plantId={id} />
         )}
         
         {activeTab === 'history' && (
-          <HistoryTab plantaId={plantId} />
+          <HistoryTab plantId={id} />
         )}
+      </div>
+
+      {/* Debug Info */}
+      <div className="debug-section">
+        <details>
+          <summary>🔍 Información de Debug</summary>
+          <div className="debug-content">
+            <p><strong>ID:</strong> {id}</p>
+            <p><strong>URL:</strong> {window.location.href}</p>
+            <p><strong>Sensores:</strong> {sensores.length}</p>
+            <pre>{JSON.stringify(planta, null, 2)}</pre>
+          </div>
+        </details>
       </div>
     </div>
   );
@@ -220,6 +392,23 @@ const OverviewTab = ({ planta, sensores, configuracion }) => {
               {configuracion ? `${configuracion.humedadObjetivo}%` : '--'}
             </span>
             <span className="metric-label">Humedad Objetivo</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Información General */}
+      <div className="info-section">
+        <h3>Información General</h3>
+        <div className="info-grid">
+          <div className="info-item">
+            <span className="info-label">Familia</span>
+            <span className="info-value">{planta.familia || 'No especificada'}</span>
+          </div>
+          <div className="info-item">
+            <span className="info-label">Última actualización</span>
+            <span className="info-value">
+              {new Date().toLocaleDateString()}
+            </span>
           </div>
         </div>
       </div>
@@ -288,7 +477,7 @@ const SensorsTab = ({ sensores }) => {
             const estado = getEstadoSensor(sensor.idEstadoSensor);
             
             return (
-              <div key={sensor.idSensor} className="sensor-card">
+              <div key={sensor.id} className="sensor-card">
                 <div className="sensor-header">
                   <div className="sensor-icon">{tipo.icon}</div>
                   <div className="sensor-status" style={{ backgroundColor: estado.color }}>
@@ -311,15 +500,6 @@ const SensorsTab = ({ sensores }) => {
                     </div>
                   )}
                 </div>
-                
-                <div className="sensor-actions">
-                  <button className="btn-icon" title="Ver historial">
-                    📈
-                  </button>
-                  <button className="btn-icon" title="Configurar">
-                    ⚙️
-                  </button>
-                </div>
               </div>
             );
           })}
@@ -330,7 +510,7 @@ const SensorsTab = ({ sensores }) => {
 };
 
 // Componente para la pestaña de Configuración
-const ConfigTab = ({ configuracion, plantaId }) => {
+const ConfigTab = ({ configuracion, plantId }) => {
   return (
     <div className="config-tab">
       <h3>Configuración de Monitoreo</h3>
@@ -341,9 +521,6 @@ const ConfigTab = ({ configuracion, plantaId }) => {
             <label>Humedad Objetivo</label>
             <div className="config-value">
               <span className="value">{configuracion.humedadObjetivo}%</span>
-              <button className="btn btn-secondary btn-sm">
-                Modificar
-              </button>
             </div>
           </div>
           
@@ -351,9 +528,6 @@ const ConfigTab = ({ configuracion, plantaId }) => {
             <label>Temperatura Máxima</label>
             <div className="config-value">
               <span className="value">{configuracion.tempMax}°C</span>
-              <button className="btn btn-secondary btn-sm">
-                Modificar
-              </button>
             </div>
           </div>
           
@@ -361,9 +535,6 @@ const ConfigTab = ({ configuracion, plantaId }) => {
             <label>Temperatura Mínima</label>
             <div className="config-value">
               <span className="value">{configuracion.tempMin}°C</span>
-              <button className="btn btn-secondary btn-sm">
-                Modificar
-              </button>
             </div>
           </div>
         </div>
@@ -382,7 +553,7 @@ const ConfigTab = ({ configuracion, plantaId }) => {
 };
 
 // Componente para la pestaña de Historial
-const HistoryTab = ({ plantaId }) => {
+const HistoryTab = ({ plantId }) => {
   return (
     <div className="history-tab">
       <h3>Historial de la Planta</h3>
@@ -393,6 +564,46 @@ const HistoryTab = ({ plantaId }) => {
       </div>
     </div>
   );
+};
+
+// Datos demo locales para fallback
+const demoData = {
+  plantas: [
+    {
+      id: 1,
+      idPlanta: 1,
+      nombrePersonalizado: "Lavanda del Jardín",
+      especie: "Lavandula",
+      estado: "saludable",
+      aspecto: "floreciendo",
+      fecha_creacion: "2024-01-15",
+      foto: "/images/lavanda.jpg",
+      descripcion: "Lavanda francesa en maceta de terracota",
+      familia: 1
+    }
+  ],
+  sensores: [
+    {
+      id: 1,
+      idPlanta: 1,
+      idTipoSensor: 1,
+      idEstadoSensor: 1,
+      macAddress: "AA:BB:CC:DD:EE:01",
+      ultimaMedicion: {
+        valor: 65,
+        fechaHora: "2024-03-20T10:30:00Z"
+      }
+    }
+  ],
+  configuraciones: [
+    {
+      id: 1,
+      idPlanta: 1,
+      humedadObjetivo: 60,
+      tempMax: 30,
+      tempMin: 15
+    }
+  ]
 };
 
 export default PlantDetail;

@@ -1,9 +1,18 @@
 // src/components/plants/PlantList.js
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import PlantCard from './PlantCard';
 import './PlantList.css';
 
-const PlantList = ({ plantas = [], onAddPlant, onSelectPlant }) => {
+const PlantList = ({ plantas = [], onAddPlant }) => {
+  const navigate = useNavigate();
+
+  const handleViewPlant = (planta) => {
+    console.log("📋 PlantList - Planta seleccionada:", planta);
+    // Navegar a la ruta de detalle con el ID
+    navigate(`/plantas/${planta.idPlanta || planta.id}`);
+  };
+
   return (
     <div className="plant-list-container">
       <div className="plant-list-header">
@@ -26,9 +35,9 @@ const PlantList = ({ plantas = [], onAddPlant, onSelectPlant }) => {
         <div className="plant-grid">
           {plantas.map((planta) => (
             <PlantCard
-              key={planta.idPlanta}
+              key={planta.idPlanta || planta.id}
               planta={planta}
-              onSelect={onSelectPlant}
+              onSelect={() => handleViewPlant(planta)}
             />
           ))}
         </div>
