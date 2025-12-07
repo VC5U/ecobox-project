@@ -9,6 +9,7 @@ import ResetPassword from './pages/ResetPassword';
 import Dashboard from './pages/Dashboard';
 import Plantas from './pages/Plantas';
 import PlantForm from './components/plants/PlantForm';
+import Perfil from './pages/Perfil';
 
 import PlantEdit from './components/plants/PlantEdit'; // ← NUEVA IMPORT
 import PlantDetail from './components/plants/PlantDetail'; // ← AGREGAR ESTA IMPORT
@@ -56,7 +57,8 @@ function App() {
               
               {/* Rutas protegidas */}
               <Route path="/dashboard" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
-              
+              <Route path="/perfil" element={<ProtectedRoute><Layout><Perfil /></Layout></ProtectedRoute>} />
+
               {/* RUTA DE LISTA DE PLANTAS */}
               <Route path="/plantas" element={<ProtectedRoute><Layout><Plantas /></Layout></ProtectedRoute>} />
               <Route path="/plantas/:id/editar" element={<ProtectedRoute><Layout><PlantEdit /> {/* O <PlantForm /> si usas ese */}</Layout></ProtectedRoute>}/>

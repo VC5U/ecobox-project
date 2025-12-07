@@ -10,7 +10,7 @@ from .views import (
     SeguimientoEstadoPlantaViewSet,
 )
 from .views.auth_views import RegistroView, SolicitarResetPasswordView, ResetPasswordView
-
+from .views.profile_views import UserProfileView # ← Agregar estos
 
 router = DefaultRouter()
 router.register(r'roles', RolViewSet)
@@ -34,9 +34,9 @@ urlpatterns = [
     path('auth/logout/', LogoutView.as_view(), name='logout'),
     path('dashboard/', DashboardView.as_view(), name='dashboard'),
      # Autenticación
-
     path('auth/registro/', RegistroView.as_view(), name='registro'),
     path('auth/solicitar-reset-password/', SolicitarResetPasswordView.as_view(), name='solicitar_reset_password'),
     path('auth/reset-password/<str:token>/', ResetPasswordView.as_view(), name='reset_password'),
-
+  # Perfil de usuario - NUEVAS RUTAS
+    path('auth/profile/', UserProfileView.as_view(), name='user_profile'),
 ]

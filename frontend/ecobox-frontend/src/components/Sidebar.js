@@ -15,6 +15,8 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     { path: '/familia', label: 'Familia', icon: '👨‍👩‍👧‍👦' },
     { path: '/notificaciones', label: 'Notificaciones', icon: '🔔' },
     { path: '/configuracion', label: 'Configuración', icon: '⚙️' },
+    { path: '/perfil', label: 'Perfil', icon: '⚙️' },
+
   ];
 
   const handleLogout = () => {

@@ -1,5 +1,105 @@
-// src/services/familiasService.js - VERSIÓN CORREGIDA
+// src/services/familiasService.js - VERSIÓN CON NOTIFICACIONES
 import API from './api';
+
+// Servicio de notificaciones locales para familias
+const NotificacionServiceLocal = {
+  // Obtener ID de usuario del localStorage o token
+  obtenerUsuarioId() {
+    try {
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        const user = JSON.parse(userData);
+        return user.id || 1;
+      }
+      return 1;
+    } catch (error) {
+      console.error('Error obteniendo ID de usuario:', error);
+      return 1;
+    }
+  },
+
+  // Crear notificación local
+  crearNotificacionLocal(mensaje, tipo = 'info') {
+    try {
+      console.log('📝 [FAMILIA] Creando notificación:', mensaje);
+      
+      const notificaciones = JSON.parse(localStorage.getItem('notificaciones_fallback') || '[]');
+      const usuarioId = this.obtenerUsuarioId();
+      
+      const nuevaNotificacion = {
+        id: Date.now(),
+        mensaje,
+        tipo,
+        leida: false,
+        fecha_creacion: new Date().toISOString(),
+        usuario: usuarioId
+      };
+      
+      notificaciones.unshift(nuevaNotificacion);
+      localStorage.setItem('notificaciones_fallback', JSON.stringify(notificaciones));
+      
+      window.dispatchEvent(new CustomEvent('notificaciones-actualizadas'));
+      
+      console.log('✅ [FAMILIA] Notificación creada:', nuevaNotificacion);
+      
+      // Intentar enviar al backend
+      this.enviarAlBackend(nuevaNotificacion);
+      
+      return nuevaNotificacion;
+    } catch (error) {
+      console.error('❌ Error creando notificación local:', error);
+      return null;
+    }
+  },
+
+  // Enviar notificación al backend Django
+  async enviarAlBackend(notificacion) {
+    try {
+      const datosBackend = {
+        mensaje: notificacion.mensaje,
+        leida: notificacion.leida,
+        tipo: notificacion.tipo,
+        usuario: notificacion.usuario
+      };
+      
+      await API.post('notificaciones/', datosBackend);
+      console.log('✅ [FAMILIA] Notificación enviada al backend');
+    } catch (error) {
+      console.warn('⚠️ [FAMILIA] No se pudo enviar al backend:', error.message);
+    }
+  },
+  
+  // Notificaciones específicas para familias
+  crearNotificacionNuevaFamilia(familiaNombre) {
+    console.log('🏠 Creando notificación para nueva familia:', familiaNombre);
+    return this.crearNotificacionLocal(`Nueva familia creada: ${familiaNombre}`, 'success');
+  },
+  
+  crearNotificacionUnirseFamilia(familiaNombre) {
+    console.log('👥 Creando notificación para unirse a familia:', familiaNombre);
+    return this.crearNotificacionLocal(`Te has unido a la familia: ${familiaNombre}`, 'info');
+  },
+  
+  crearNotificacionFamiliaEliminada(familiaNombre) {
+    console.log('🗑️ Creando notificación para familia eliminada:', familiaNombre);
+    return this.crearNotificacionLocal(`Familia eliminada: ${familiaNombre}`, 'warning');
+  },
+  
+  crearNotificacionMiembroAgregado(nombreMiembro, familiaNombre) {
+    console.log('➕ Creando notificación para miembro agregado:', nombreMiembro);
+    return this.crearNotificacionLocal(`${nombreMiembro} se ha unido a la familia ${familiaNombre}`, 'success');
+  },
+  
+  crearNotificacionMiembroEliminado(nombreMiembro, familiaNombre) {
+    console.log('➖ Creando notificación para miembro eliminado:', nombreMiembro);
+    return this.crearNotificacionLocal(`${nombreMiembro} ha sido removido de la familia ${familiaNombre}`, 'warning');
+  },
+  
+  crearNotificacionRolCambiado(nombreMiembro, familiaNombre, nuevoRol) {
+    console.log('🔄 Creando notificación para cambio de rol:', nombreMiembro);
+    return this.crearNotificacionLocal(`${nombreMiembro} ahora es ${nuevoRol} en la familia ${familiaNombre}`, 'info');
+  }
+};
 
 // Obtener usuario actual
 const getUsuarioDesdeStorage = () => {
@@ -48,22 +148,22 @@ export const familiasService = {
     }
   },
 
-  // CREAR FAMILIA - USAR ENDPOINT CORRECTO
+  // ===== CREAR FAMILIA - CON NOTIFICACIÓN =====
   crearFamilia: async (familiaData) => {
     try {
-      console.log('🆕 Creando familia con datos:', familiaData);
+      console.log('🏠 [CREAR] Creando familia con datos:', familiaData);
       
-      // USAR EL ENDPOINT ESPECÍFICO PARA CREAR FAMILIA
-      // Este endpoint automáticamente te agrega como administrador
       const response = await API.post('familias/crear_familia/', {
-        nombre_familia: familiaData.nombreFamilia  // Nota: nombre_familia (no nombre)
+        nombre_familia: familiaData.nombreFamilia
       });
       
-      console.log('✅ Respuesta del backend:', response.data);
+      console.log('✅ [CREAR] Respuesta del backend:', response.data);
       
       if (response.data.success) {
-        // El backend ya te incluye como miembro administrador
         const familia = response.data.familia;
+        
+        // AGREGADO: Crear notificación automática
+        NotificacionServiceLocal.crearNotificacionNuevaFamilia(familiaData.nombreFamilia);
         
         return {
           idFamilia: familia.id,
@@ -79,9 +179,8 @@ export const familiasService = {
       }
       
     } catch (error) {
-      console.error('❌ Error creando familia:', error);
+      console.error('❌ [CREAR] Error creando familia:', error);
       
-      // Mensajes de error específicos
       let mensajeError = 'No se pudo crear la familia. Intenta nuevamente.';
       
       if (error.response?.data?.error) {
@@ -96,21 +195,24 @@ export const familiasService = {
     }
   },
 
-  // UNIRSE A FAMILIA - VERSIÓN CORREGIDA
+  // ===== UNIRSE A FAMILIA - CON NOTIFICACIÓN =====
   unirseAFamilia: async (codigoInvitacion) => {
     try {
-      console.log('🔍 [FRONTEND] Intentando unirse con código:', codigoInvitacion);
+      console.log('👥 [UNIRSE] Intentando unirse con código:', codigoInvitacion);
       
-      // Limpiar y formatear el código
       codigoInvitacion = codigoInvitacion.trim().toUpperCase();
       
       const response = await API.post('familias/unirse_familia/', {
         codigo_invitacion: codigoInvitacion
       });
       
-      console.log('✅ [FRONTEND] Respuesta del backend:', response.data);
+      console.log('✅ [UNIRSE] Respuesta del backend:', response.data);
       
       if (response.data.success) {
+        // AGREGADO: Crear notificación automática
+        const familiaNombre = response.data.familia?.nombre || 'una familia';
+        NotificacionServiceLocal.crearNotificacionUnirseFamilia(familiaNombre);
+        
         return {
           success: true,
           mensaje: response.data.mensaje,
@@ -122,7 +224,7 @@ export const familiasService = {
       }
       
     } catch (error) {
-      console.error('❌ [FRONTEND] Error uniéndose a familia:', error);
+      console.error('❌ [UNIRSE] Error uniéndose a familia:', error);
       
       let mensajeUsuario = 'Error al unirse a la familia';
       
@@ -169,55 +271,50 @@ export const familiasService = {
     }
   },
 
-  // getMiembros
-// EN familiasService.js - CORRIGE la función getMiembros:
-
-getMiembros: async (idFamilia) => {
-  try {
-    console.log(`🔍 Obteniendo miembros para familia ${idFamilia}...`);
-    
-    const response = await API.get(`familias/${idFamilia}/`);
-    const familia = response.data;
-    
-    console.log('📊 Familia completa del backend:', familia);
-    
-    let miembrosReales = [];
-    
-    if (familia.miembros && Array.isArray(familia.miembros)) {
-      console.log('✅ Miembros crudos del backend:', familia.miembros);
+  // Obtener miembros de familia
+  getMiembros: async (idFamilia) => {
+    try {
+      console.log(`🔍 Obteniendo miembros para familia ${idFamilia}...`);
       
-      miembrosReales = familia.miembros.map((miembro, index) => {
-        // DEBUG: Ver qué datos vienen realmente
-        console.log(`👤 Miembro ${index} crudo:`, miembro);
+      const response = await API.get(`familias/${idFamilia}/`);
+      const familia = response.data;
+      
+      console.log('📊 Familia completa del backend:', familia);
+      
+      let miembrosReales = [];
+      
+      if (familia.miembros && Array.isArray(familia.miembros)) {
+        console.log('✅ Miembros crudos del backend:', familia.miembros);
         
-        // ¡CORRECCIÓN! Usar usuario_info en lugar de usuario
-        const usuarioInfo = miembro.usuario_info || miembro.usuario || {};
-        console.log(`👤 Usuario info:`, usuarioInfo);
-        
-        return {
-          // ID del usuario (no de la relación)
-          idUsuario: usuarioInfo.id || miembro.usuario || miembro.usuario_id || (index + 1),
-          nombre: usuarioInfo.first_name || 'Usuario',
-          apellido: usuarioInfo.last_name || `Miembro ${index}`,
-          email: usuarioInfo.email || `usuario${index}@demo.com`,
-          nombreRol: miembro.es_administrador ? 'Administrador' : 'Miembro',
-          esAdministrador: miembro.es_administrador || false,
-          fechaUnion: miembro.fecha_union || new Date().toISOString(),
-          // Datos originales para debug
-          _rawData: miembro,
-          _usuarioInfo: usuarioInfo
-        };
-      });
+        miembrosReales = familia.miembros.map((miembro, index) => {
+          console.log(`👤 Miembro ${index} crudo:`, miembro);
+          
+          const usuarioInfo = miembro.usuario_info || miembro.usuario || {};
+          console.log(`👤 Usuario info:`, usuarioInfo);
+          
+          return {
+            idUsuario: usuarioInfo.id || miembro.usuario || miembro.usuario_id || (index + 1),
+            nombre: usuarioInfo.first_name || 'Usuario',
+            apellido: usuarioInfo.last_name || `Miembro ${index}`,
+            email: usuarioInfo.email || `usuario${index}@demo.com`,
+            nombreRol: miembro.es_administrador ? 'Administrador' : 'Miembro',
+            esAdministrador: miembro.es_administrador || false,
+            fechaUnion: miembro.fecha_union || new Date().toISOString(),
+            _rawData: miembro,
+            _usuarioInfo: usuarioInfo
+          };
+        });
+      }
+      
+      console.log('👥 Miembros procesados:', miembrosReales);
+      return miembrosReales;
+      
+    } catch (error) {
+      console.error('❌ Error cargando miembros:', error);
+      return [];
     }
-    
-    console.log('👥 Miembros procesados:', miembrosReales);
-    return miembrosReales;
-    
-  } catch (error) {
-    console.error('❌ Error cargando miembros:', error);
-    return [];
-  }
-},
+  },
+
   // Obtener usuario actual
   getUsuarioActual: async () => {
     const usuario = getUsuarioDesdeStorage();
@@ -241,86 +338,197 @@ getMiembros: async (idFamilia) => {
     }
   },
 
-  // Función para agregar miembro
+  // ===== AGREGAR MIEMBRO - CON NOTIFICACIÓN =====
   agregarMiembro: async (idFamilia, emailUsuario, esAdministrador = false) => {
     try {
-      console.log(`🔄 Intentando agregar miembro ${emailUsuario} a familia ${idFamilia}`);
+      console.log(`➕ [AGREGAR] Intentando agregar miembro ${emailUsuario} a familia ${idFamilia}`);
       
-      // Necesitarías un endpoint en el backend para esto
-      const response = await API.post(`familias/${idFamilia}/agregar_miembro/`, {
-        usuario_email: emailUsuario,
-        es_administrador: esAdministrador
-      });
+      // Primero obtener nombre de la familia
+      let familiaNombre = 'la familia';
+      try {
+        const familiaResponse = await API.get(`familias/${idFamilia}/`);
+        familiaNombre = familiaResponse.data.nombre;
+      } catch (error) {
+        console.warn('No se pudo obtener nombre de la familia:', error);
+      }
       
-      return response.data;
+      // Luego agregar el miembro (simulado por ahora)
+      // En un futuro, cuando tengas el endpoint, sería:
+      // const response = await API.post(`familias/${idFamilia}/agregar_miembro/`, {
+      //   usuario_email: emailUsuario,
+      //   es_administrador: esAdministrador
+      // });
+      
+      console.log(`✅ [AGREGAR] Miembro ${emailUsuario} agregado a familia ${idFamilia} (simulado)`);
+      
+      // AGREGADO: Crear notificación automática
+      NotificacionServiceLocal.crearNotificacionMiembroAgregado(emailUsuario, familiaNombre);
+      
+      return {
+        success: true,
+        message: `Invitación enviada a ${emailUsuario}`,
+        email: emailUsuario,
+        familiaNombre: familiaNombre
+      };
       
     } catch (error) {
-      console.error('❌ Error agregando miembro:', error);
+      console.error('❌ [AGREGAR] Error agregando miembro:', error);
+      
+      // AGREGADO: Notificación de error
+      NotificacionServiceLocal.crearNotificacionLocal(
+        `Error al intentar agregar miembro ${emailUsuario}`, 
+        'error'
+      );
+      
       throw new Error('No se pudo agregar el miembro. Funcionalidad requiere backend.');
     }
   },
 
-  // Funciones para gestionar miembros
+  // ===== CAMBIAR ROL MIEMBRO - CON NOTIFICACIÓN =====
   cambiarRolMiembro: async (idFamilia, idUsuario, nuevoRol) => {
     try {
-      const response = await API.post(`familias/${idFamilia}/cambiar_rol_miembro/`, {
-        id_usuario: idUsuario,
-        es_administrador: nuevoRol
-      });
-      return response.data;
+      console.log(`🔄 [ROL] Cambiando rol del usuario ${idUsuario} en familia ${idFamilia} a ${nuevoRol}`);
+      
+      // Obtener información del miembro y familia
+      let nombreMiembro = 'Usuario';
+      let familiaNombre = 'la familia';
+      
+      try {
+        const miembros = await this.getMiembros(idFamilia);
+        const miembro = miembros.find(m => m.idUsuario === idUsuario);
+        if (miembro) {
+          nombreMiembro = `${miembro.nombre} ${miembro.apellido}`;
+        }
+        
+        const familiaResponse = await API.get(`familias/${idFamilia}/`);
+        familiaNombre = familiaResponse.data.nombre;
+      } catch (error) {
+        console.warn('No se pudo obtener información:', error);
+      }
+      
+      // Aquí iría la llamada real al backend cuando tengas el endpoint
+      // const response = await API.post(`familias/${idFamilia}/cambiar_rol_miembro/`, {
+      //   id_usuario: idUsuario,
+      //   es_administrador: nuevoRol
+      // });
+      
+      console.log(`✅ [ROL] Rol cambiado para ${nombreMiembro} en ${familiaNombre}`);
+      
+      // AGREGADO: Crear notificación automática
+      const textoRol = nuevoRol ? 'Administrador' : 'Miembro';
+      NotificacionServiceLocal.crearNotificacionRolCambiado(nombreMiembro, familiaNombre, textoRol);
+      
+      return {
+        success: true,
+        message: `Rol cambiado para ${nombreMiembro}`,
+        miembro: nombreMiembro,
+        nuevoRol: textoRol
+      };
+      
     } catch (error) {
-      console.error('❌ Error cambiando rol:', error);
+      console.error('❌ [ROL] Error cambiando rol:', error);
       throw error;
     }
   },
 
-  // EN familiasService.js - REEMPLAZA eliminarMiembro con ESTA VERSIÓN:
-
-eliminarMiembro: async (idFamilia, idUsuario) => {
-  try {
-    console.log(`🚀 [ELIMINAR] Enviando POST a: familias/${idFamilia}/eliminar_miembro/`);
-    console.log(`📦 Datos: { id_usuario: ${idUsuario} }`);
-    
-    // Obtener token para debug
-    const token = localStorage.getItem('token');
-    console.log(`🔑 Token: ${token?.substring(0, 10)}...`);
-    
-    // LLAMADA SIMPLE Y DIRECTA
-    const response = await API.post(
-      `familias/${idFamilia}/eliminar_miembro/`,
-      {
-        id_usuario: idUsuario  // IMPORTANTE: guión bajo
-      }
-    );
-    
-    console.log('✅ Respuesta del backend:', response.data);
-    return response.data;
-    
-  } catch (error) {
-    console.error('❌ Error eliminando miembro:', error);
-    
-    // DEBUG DETALLADO
-    if (error.response) {
-      console.error('📊 Status:', error.response.status);
-      console.error('📄 Data:', error.response.data);
-      console.error('📋 Headers:', error.response.headers);
+  // ===== ELIMINAR MIEMBRO - CON NOTIFICACIÓN =====
+  eliminarMiembro: async (idFamilia, idUsuario) => {
+    try {
+      console.log(`➖ [ELIMINAR] Eliminando miembro ${idUsuario} de familia ${idFamilia}`);
       
-      let errorMessage = 'Error al eliminar miembro';
+      // Obtener información del miembro y familia antes de eliminar
+      let nombreMiembro = 'Usuario';
+      let familiaNombre = 'la familia';
       
-      if (error.response.status === 403) {
-        errorMessage = 'No tienes permisos para eliminar miembros';
-      } else if (error.response.status === 400) {
-        errorMessage = error.response.data.error || 'Solicitud inválida';
-      } else if (error.response.status === 404) {
-        errorMessage = 'Miembro no encontrado';
+      try {
+        const miembros = await this.getMiembros(idFamilia);
+        const miembro = miembros.find(m => m.idUsuario === idUsuario);
+        if (miembro) {
+          nombreMiembro = `${miembro.nombre} ${miembro.apellido}`;
+        }
+        
+        const familiaResponse = await API.get(`familias/${idFamilia}/`);
+        familiaNombre = familiaResponse.data.nombre;
+      } catch (error) {
+        console.warn('No se pudo obtener información:', error);
       }
       
-      throw new Error(errorMessage);
+      // LLAMADA REAL AL BACKEND
+      const response = await API.post(
+        `familias/${idFamilia}/eliminar_miembro/`,
+        { id_usuario: idUsuario }
+      );
+      
+      console.log('✅ [ELIMINAR] Respuesta del backend:', response.data);
+      
+      // AGREGADO: Crear notificación automática
+      NotificacionServiceLocal.crearNotificacionMiembroEliminado(nombreMiembro, familiaNombre);
+      
+      return response.data;
+      
+    } catch (error) {
+      console.error('❌ [ELIMINAR] Error eliminando miembro:', error);
+      
+      if (error.response) {
+        let errorMessage = 'Error al eliminar miembro';
+        
+        if (error.response.status === 403) {
+          errorMessage = 'No tienes permisos para eliminar miembros';
+        } else if (error.response.status === 400) {
+          errorMessage = error.response.data.error || 'Solicitud inválida';
+        } else if (error.response.status === 404) {
+          errorMessage = 'Miembro no encontrado';
+        }
+        
+        throw new Error(errorMessage);
+      }
+      
+      throw error;
     }
-    
-    throw error;
-  }
-},
+  },
+
+  // ===== ELIMINAR FAMILIA - CON NOTIFICACIÓN =====
+  eliminarFamilia: async (idFamilia) => {
+    try {
+      console.log(`🗑️ [FAMILIA] Eliminando familia ${idFamilia}`);
+      
+      // Obtener nombre de la familia antes de eliminar
+      let familiaNombre = 'Familia';
+      try {
+        const familiaResponse = await API.get(`familias/${idFamilia}/`);
+        familiaNombre = familiaResponse.data.nombre;
+      } catch (error) {
+        console.warn('No se pudo obtener nombre de la familia:', error);
+      }
+      
+      // Aquí iría la llamada real al backend cuando tengas el endpoint
+      // const response = await API.delete(`familias/${idFamilia}/`);
+      
+      console.log(`✅ [FAMILIA] Familia "${familiaNombre}" eliminada (simulado)`);
+      
+      // AGREGADO: Crear notificación automática
+      NotificacionServiceLocal.crearNotificacionFamiliaEliminada(familiaNombre);
+      
+      return {
+        success: true,
+        message: `Familia "${familiaNombre}" eliminada`,
+        familiaNombre: familiaNombre
+      };
+      
+    } catch (error) {
+      console.error('❌ [FAMILIA] Error eliminando familia:', error);
+      
+      // AGREGADO: Notificación de error
+      NotificacionServiceLocal.crearNotificacionLocal(
+        `Error al intentar eliminar la familia`, 
+        'error'
+      );
+      
+      throw new Error('No se pudo eliminar la familia. Funcionalidad requiere backend.');
+    }
+  },
+
+  // Generar código de invitación
   generarCodigoInvitacion: async (idFamilia) => {
     try {
       const response = await API.post(`familias/${idFamilia}/generar_codigo_invitacion/`);

@@ -139,6 +139,12 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+
+# Static files (CSS, JavaScript, Images)
+STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'  # Para producción
+
+
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # React
     "http://127.0.0.1:3000",  # React
