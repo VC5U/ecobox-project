@@ -1,0 +1,3 @@
+"""
+Paquete API para EcoBox.
+"""

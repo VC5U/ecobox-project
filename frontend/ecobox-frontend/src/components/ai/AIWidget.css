@@ -1,0 +1,210 @@
+/* src/components/ai/AIWidget.css */
+.aiWidget {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: 1px solid #e9ecef;
+}
+
+.aiWidget:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+.aiWidgetHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #f1f3f5;
+}
+
+.aiStatus {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.statusDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  position: relative;
+}
+
+.statusDot::after {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(46, 213, 115, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(46, 213, 115, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(46, 213, 115, 0);
+  }
+}
+
+.statusText {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  letter-spacing: 0.3px;
+}
+
+.aiVersion {
+  font-size: 12px;
+  color: #6c757d;
+  background: #f8f9fa;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+}
+
+.aiWidgetContent {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 25px;
+  padding: 15px 0;
+  border-top: 1px solid #f1f3f5;
+  border-bottom: 1px solid #f1f3f5;
+}
+
+.aiStat {
+  text-align: center;
+  flex: 1;
+  padding: 0 10px;
+}
+
+.aiStat:not(:last-child) {
+  border-right: 1px solid #f1f3f5;
+}
+
+.statValue {
+  font-size: 28px;
+  font-weight: 700;
+  color: #667eea;
+  margin-bottom: 5px;
+  line-height: 1;
+  text-shadow: 0 2px 4px rgba(102, 126, 234, 0.1);
+}
+
+.statLabel {
+  font-size: 12px;
+  color: #6c757d;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  font-weight: 500;
+}
+
+.aiWidgetActions {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 15px;
+}
+
+.aiActionButton {
+  flex: 1;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  letter-spacing: 0.3px;
+}
+
+.aiActionButton.chat {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.aiActionButton.chat:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.aiActionButton.chat:active {
+  transform: translateY(0);
+}
+
+.aiActionButton.recommendations {
+  background: white;
+  color: #495057;
+  border: 2px solid #e9ecef;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.aiActionButton.recommendations:hover {
+  border-color: #667eea;
+  color: #667eea;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+  transform: translateY(-2px);
+}
+
+.buttonIcon {
+  font-size: 16px;
+}
+
+.aiWidgetFooter {
+  text-align: center;
+  padding-top: 15px;
+  border-top: 1px solid #f1f3f5;
+}
+
+.aiTimestamp {
+  font-size: 11px;
+  color: #adb5bd;
+  font-family: 'Courier New', monospace;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .aiWidget {
+    padding: 15px;
+  }
+  
+  .statValue {
+    font-size: 24px;
+  }
+  
+  .aiActionButton {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+}
+
+/* Animación de carga */
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: 200px 0;
+  }
+}
+
+.aiWidget.loading {
+  background: linear-gradient(90deg, #f6f7f8 25%, #edeef1 50%, #f6f7f8 75%);
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite;
+}

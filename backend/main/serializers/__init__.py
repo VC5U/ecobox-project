@@ -15,6 +15,9 @@ from .log_sistema_serializer import LogSistemaSerializer
 from .notificacion_serializer import NotificacionSerializer
 from .prediccion_ia_serializer import PrediccionIASerializer
 
+from .ai_service import EcoBoxAI
+from .chatbot_engine import ChatbotEngine
+from .recommendation_engine import RecommendationEngine
 __all__ = [
     'LoginSerializer',
     'RolSerializer',
@@ -31,5 +34,9 @@ __all__ = [
     'ConfiguracionSerializer',
     'LogSistemaSerializer',
     'NotificacionSerializer',
-    'PrediccionIASerializer'
+    'PrediccionIASerializer',
+    'EcoBoxAI',
+    'ChatbotEngine',
+    'RecommendationEngine',
+    
 ]

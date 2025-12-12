@@ -39,4 +39,6 @@ urlpatterns = [
     path('auth/reset-password/<str:token>/', ResetPasswordView.as_view(), name='reset_password'),
   # Perfil de usuario - NUEVAS RUTAS
     path('auth/profile/', UserProfileView.as_view(), name='user_profile'),
+        path('api/ai/', include('api.ai.urls')),  # ← ¡ESTA ES LA LÍNEA QUE FALTA!
+
 ]

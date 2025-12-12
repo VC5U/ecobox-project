@@ -428,3 +428,231 @@
     grid-template-columns: 1fr;
   }
 }
+/* ===== ESTILOS PARA IA EN DASHBOARD ===== */
+
+/* Métrica de IA */
+.metricCard.ai {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.metricCard.ai .metricIcon {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Botón de IA en header */
+.aiButton {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  margin-right: 10px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.aiButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+/* Widget de IA */
+.aiWidgetContainer {
+  padding: 15px;
+}
+
+.aiPlaceholder {
+  text-align: center;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.aiButtonSmall {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-top: 10px;
+}
+
+/* Sección de Recomendaciones IA */
+.aiRecommendationsSection {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  margin-top: 25px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.sectionHeader h3 {
+  margin: 0;
+  color: #333;
+}
+
+.viewAllLink {
+  color: #667eea;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.viewAllLink:hover {
+  text-decoration: underline;
+}
+
+.recommendationsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 15px;
+}
+
+.recommendationCard {
+  padding: 15px;
+  border-radius: 8px;
+  border-left: 4px solid;
+}
+
+.recommendationCard.urgent {
+  border-left-color: #ff4757;
+  background: #fff5f5;
+}
+
+.recommendationCard.warning {
+  border-left-color: #ffa502;
+  background: #fff9e6;
+}
+
+.recommendationCard.info {
+  border-left-color: #2ed573;
+  background: #f0fff4;
+}
+
+.recHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.recBadge {
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.urgent .recBadge {
+  background: #ff4757;
+  color: white;
+}
+
+.warning .recBadge {
+  background: #ffa502;
+  color: white;
+}
+
+.info .recBadge {
+  background: #2ed573;
+  color: white;
+}
+
+.recTime {
+  font-size: 12px;
+  color: #666;
+}
+
+.recText {
+  margin: 10px 0;
+  color: #333;
+}
+
+.recAction {
+  background: transparent;
+  border: 1px solid #ddd;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.recAction:hover {
+  background: #f8f9fa;
+  border-color: #667eea;
+}
+
+/* Modal del Chatbot */
+.chatbotModalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.chatbotModal {
+  background: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.chatbotHeader {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 15px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.chatbotHeader h3 {
+  margin: 0;
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.chatbotContent {
+  padding: 20px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .recommendationsGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  .aiButton {
+    padding: 6px 12px;
+    font-size: 14px;
+  }
+}

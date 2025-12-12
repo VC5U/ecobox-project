@@ -1,0 +1,101 @@
+.recommendationsPanel {
+  background: white;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.panelHeader {
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #eee;
+}
+
+.panelHeader h2 {
+  margin: 0 0 5px 0;
+  color: #333;
+}
+
+.panelHeader p {
+  margin: 0;
+  color: #666;
+  font-size: 14px;
+}
+
+.recommendationsList {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.recommendation {
+  padding: 15px;
+  border-radius: 8px;
+  border-left: 4px solid;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  background: #f8f9fa;
+}
+
+.recommendation.high {
+  border-left-color: #ff4757;
+}
+
+.recommendation.medium {
+  border-left-color: #ffa502;
+}
+
+.recommendation.low {
+  border-left-color: #2ed573;
+}
+
+.recType {
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: white;
+}
+
+.high .recType {
+  color: #ff4757;
+  background: #fff5f5;
+}
+
+.medium .recType {
+  color: #ffa502;
+  background: #fff9e6;
+}
+
+.low .recType {
+  color: #2ed573;
+  background: #f0fff4;
+}
+
+.recMessage {
+  flex: 1;
+  font-size: 14px;
+}
+
+.recAction {
+  background: #667eea;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.recAction:hover {
+  background: #5a6fd8;
+}
+
+.loading {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+}
