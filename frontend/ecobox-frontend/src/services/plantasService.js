@@ -178,7 +178,108 @@ export const plantasService = {
       return planta || { ...demoData.plantas[0], id: plantaId, nombrePersonalizado: `Planta ${plantaId}` };
     }
   },
+  
+// En plantasService.js
 
+getSensores: async () => {
+  try {
+    console.log('📡 Obteniendo todos los sensores...');
+    const response = await API.get('sensores/');
+    console.log('✅ Sensores obtenidos:', response.data.length);
+    return response.data || [];
+  } catch (error) {
+    console.error('❌ Error obteniendo sensores:', error);
+    return [];
+  }
+},
+// En plantasService.js - AÑADE estas funciones
+getSensoresConMediciones: async () => {
+  try {
+    console.log('📡 Obteniendo sensores con mediciones...');
+    
+    // 1. Obtener todos los sensores
+    const response = await API.get('sensores/');
+    const sensores = response.data || [];
+    
+    console.log(`✅ ${sensores.length} sensores base obtenidos`);
+    
+    // 2. Para cada sensor, obtener su última medición
+    const sensoresConMediciones = await Promise.all(
+      sensores.map(async (sensor) => {
+        try {
+          // Obtener la última medición del sensor
+          const medicionResponse = await API.get(`sensores/${sensor.id}/historial_mediciones/`, {
+            params: { 
+              limit: 1, // Solo la última
+              ordering: '-fecha' // Orden descendente por fecha
+            }
+          });
+          
+          const ultimaMedicion = medicionResponse.data[0] || null;
+          
+          // Devolver sensor con su última medición
+          return {
+            ...sensor,
+            ultima_medicion: ultimaMedicion, // Nombre que usa el backend
+            valor: ultimaMedicion?.valor || null
+          };
+          
+        } catch (error) {
+          console.warn(`⚠️ No se pudo obtener medición para sensor ${sensor.id}:`, error.message);
+          // Devolver sensor sin medición
+          return {
+            ...sensor,
+            ultima_medicion: null,
+            valor: null
+          };
+        }
+      })
+    );
+    
+    console.log('✅ Sensores procesados con mediciones:', sensoresConMediciones.length);
+    return sensoresConMediciones;
+    
+  } catch (error) {
+    console.error('❌ Error obteniendo sensores con mediciones:', error);
+    return [];
+  }
+},
+
+// Función específica para una planta
+getSensoresPlantaConMediciones: async (idPlanta) => {
+  try {
+    console.log(`📡 Obteniendo sensores con mediciones para planta ${idPlanta}...`);
+    
+    // 1. Obtener sensores de la planta
+    const sensores = await plantasService.getSensoresPlanta(idPlanta);
+    
+    // 2. Para cada sensor, obtener su última medición
+    const sensoresConMediciones = await Promise.all(
+      sensores.map(async (sensor) => {
+        try {
+          const medicionResponse = await API.get(`sensores/${sensor.id}/historial_mediciones/`, {
+            params: { limit: 1 }
+          });
+          
+          return {
+            ...sensor,
+            ultima_medicion: medicionResponse.data[0] || null
+          };
+          
+        } catch (error) {
+          console.warn(`⚠️ Error medición sensor ${sensor.id}:`, error.message);
+          return sensor;
+        }
+      })
+    );
+    
+    return sensoresConMediciones;
+    
+  } catch (error) {
+    console.error(`❌ Error sensores planta ${idPlanta}:`, error);
+    return [];
+  }
+},
   // Obtener plantas filtradas por activo=True
   getMisPlantas: async () => {
     try {
@@ -205,19 +306,51 @@ export const plantasService = {
   },
 
   // Obtener sensores de una planta
-  getSensoresPlanta: async (idPlanta) => {
-    console.log("🔧 getSensoresPlanta llamado para planta ID:", idPlanta);
+// plantasService.js - Versión limpia
+getSensoresPlanta: async (idPlanta) => {
+  console.log("🔧 Obteniendo sensores para planta ID:", idPlanta);
+  
+  try {
+    const response = await API.get('sensores/', { params: { planta: idPlanta } });
+    console.log(`✅ ${response.data.length} sensores obtenidos para planta ${idPlanta}`);
+    return response.data || [];
     
-    try {
-      const response = await API.get('sensores/', { params: { planta: idPlanta } });
-      console.log('✅ Sensores recibidos:', response.data.length);
-      return response.data || [];
-    } catch (error) {
+  } catch (error) {
+    console.error('❌ Error al obtener sensores:', error);
+    
+    // Datos demo de respaldo SOLO en desarrollo
+    if (process.env.NODE_ENV === 'development') {
       console.warn('⚠️ Usando datos demo para sensores');
-      return [];
+      
+      const datosDemo = [
+        {
+          "id": 1,
+          "nombre": "Sensor Temp Rosa",
+          "ubicacion": "Jardín Principal",
+          "fecha_instalacion": "2025-11-27T10:31:21Z",
+          "activo": true,
+          "planta": 1,
+          "tipo_sensor": 1,
+          "estado_sensor": 1
+        },
+        {
+          "id": 2,
+          "nombre": "Sensor Humedad Rosa",
+          "ubicacion": "Jardín Principal",
+          "fecha_instalacion": "2025-11-27T10:31:21Z",
+          "activo": true,
+          "planta": 1,
+          "tipo_sensor": 2,
+          "estado_sensor": 1
+        }
+      ];
+      
+      return datosDemo.filter(sensor => sensor.planta === parseInt(idPlanta));
     }
-  },
-
+    
+    return [];
+  }
+},
   // Obtener configuración de planta
   getConfiguracionPlanta: async (idPlanta) => {
     console.log("🔧 getConfiguracionPlanta llamado para planta ID:", idPlanta);
@@ -320,7 +453,48 @@ export const plantasService = {
       return plantaActualizada;
     }
   },
+// ===== MÉTODOS FALTANTES PARA PLANTDETAIL =====
 
+// Obtener última medición de un sensor (MÉTODO FALTANTE)
+getUltimasMedicionesSensor: async (idSensor) => {
+  console.log("🔧 getUltimasMedicionesSensor llamado para sensor ID:", idSensor);
+  
+  try {
+    // Usar el endpoint que ya tienes
+    const response = await API.get(`sensores/${idSensor}/historial_mediciones/`, {
+      params: { 
+        limit: 1,
+        ordering: '-fecha'
+      }
+    });
+    
+    if (response.data && response.data.length > 0) {
+      const ultimaMedicion = response.data[0];
+      console.log(`✅ Última medición sensor ${idSensor}:`, ultimaMedicion);
+      return ultimaMedicion;
+    }
+    
+    console.log(`⚠️ Sensor ${idSensor} sin mediciones`);
+    return null;
+    
+  } catch (error) {
+    console.error(`❌ Error obteniendo mediciones sensor ${idSensor}:`, error);
+    return null;
+  }
+},
+
+// Versión específica para dashboard/plantas list
+getUltimaMedicionSensor: async (idSensor) => {
+  try {
+    // Endpoint más simple si existe
+    const response = await API.get(`sensores/${idSensor}/ultima_medicion/`);
+    return response.data;
+  } catch (error) {
+    // Fallback al método anterior
+    console.log(`🔄 Fallback para sensor ${idSensor}`);
+    return await plantasService.getUltimasMedicionesSensor(idSensor);
+  }
+},
   // ===== ELIMINAR PLANTA - CON NOTIFICACIÓN MEJORADA =====
   eliminarPlanta: async (id) => {
     try {

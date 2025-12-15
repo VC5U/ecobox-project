@@ -13,10 +13,33 @@ class SensorViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
+        planta_id = self.request.query_params.get('planta')
+        
+        print(f"🎯 FILTRANDO SENSORES - Usuario: {user}")
+        print(f"🎯 Parámetro 'planta' recibido: {planta_id}")
+        
         if user.is_authenticated:
+            # Obtener familias del usuario
             familias_usuario = Familia.objects.filter(miembros__usuario=user)
+            
+            # Obtener plantas del usuario
             plantas_usuario = Planta.objects.filter(familia__in=familias_usuario)
-            return Sensor.objects.filter(planta__in=plantas_usuario)
+            
+            # SIEMPRE filtrar por plantas del usuario
+            queryset = Sensor.objects.filter(planta__in=plantas_usuario)
+            
+            # FILTRAR ADICIONALMENTE por planta si se especifica
+            if planta_id:
+                try:
+                    planta_id_int = int(planta_id)
+                    queryset = queryset.filter(planta_id=planta_id_int)
+                    print(f"🎯 Filtrado extra por planta_id: {planta_id_int}")
+                except ValueError:
+                    print(f"⚠️ Error: planta_id no es un número válido: {planta_id}")
+            
+            print(f"🎯 Total sensores encontrados: {queryset.count()}")
+            return queryset
+        
         return Sensor.objects.none()
 
     @action(detail=True, methods=['get'])

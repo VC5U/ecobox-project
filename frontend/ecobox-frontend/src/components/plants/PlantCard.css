@@ -1,151 +1,190 @@
-/* src/components/plants/PlantCard.css */
+/* src/components/plants/PlantCard.css - VERSIÓN MEJORADA */
+
+/* --- BASE DE LA TARJETA (combinando ambos estilos) --- */
 .plant-card {
   background: white;
   border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   overflow: hidden;
   transition: all 0.3s ease;
   cursor: pointer;
-  border: 1px solid #e1e5e9;
-}
-.plant-card-content {
-  margin-left: 10px;
-  margin-top: 10px;
-  margin-right: 50px;
-
+  border: 1px solid #e0e0e0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .plant-card:hover {
-  transform: translateY(-4px);
+  transform: translateY(-5px);
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* --- CONTENEDOR DE IMAGEN MEJORADO --- */
+.plant-card-image-container {
+  width: 100%;
+  height: 200px;
+  position: relative;
+  overflow: hidden;
+}
+
+.plant-card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.plant-image-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.placeholder-icon {
+  font-size: 48px;
+  opacity: 0.3;
+}
+
+/* --- ESTADO SUPERPUESTO (para estados críticos) --- */
+.plant-status-overlay {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  z-index: 10;
+}
+
+/* --- HEADER CON TÍTULO Y ESTADO --- */
+.plant-card-content {
+  padding: 16px;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .plant-card-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  padding: 12px 15px;
-  background: #f8f9fa;
-  border-bottom: 1px solid #e1e5e9;
-}
-
-.plant-type-badge {
-  background: #e3f2fd;
-  color: #1976d2;
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-}
-.meta-item {
+  align-items: flex-start;
   margin-bottom: 10px;
-  margin-top: 10px;
-}
-
-.meta-label {
-  font-size: 11px;
-  color: #666;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;  
-  margin-right: 5px;
-}
-
-.meta-value {
-  font-size: 14px;
-
-  font-weight: 600;
-  color: #2c3e50;
-}
-
-.plant-status {
-  width: 6cap;
-  height: 30px;
-  border-radius: 18%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-}
-
-.plant-card-body {
-  padding: 16px;
-}
-
-.plant-image {
-  width: 100%;
-  height: 160px;
-  object-fit: cover;
-  border-radius: 8px;
-  margin-bottom: 12px;
-}
-
-.plant-image-placeholder {
-  width: 100%;
-  height: 160px;
-  background: #f8f9fa;
-  border: 2px dashed #dee2e6;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 12px;
-}
-.plant-card-image {
-  width: 100%;
-  height: 180px;
-  object-fit: cover;
-  border-radius: 8px;
-  margin-bottom: 12px;
-
-}
-.placeholder-icon {
-  font-size: 32px;
-  opacity: 0.5;
 }
 
 .plant-name {
   font-size: 18px;
   font-weight: 600;
   color: #333;
-  
-  margin: 0 0 8px 0;
+  margin: 0;
   line-height: 1.3;
+  flex: 1;
 }
 
+.plant-status {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-left: 10px;
+  white-space: nowrap;
+}
+
+/* --- DESCRIPCIÓN --- */
 .plant-description {
   color: #666;
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1.4;
-  
-  margin: 0 0 12px 0;
+  margin: 0 0 16px 0;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  flex-grow: 1;
 }
 
+/* --- MÉTRICAS MODERNAS (Humedad/Temperatura) --- */
+.plant-metrics {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 12px 0;
+  border-top: 1px solid #f0f0f0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.metric-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.metric-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.metric-label {
+  font-size: 11px;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.metric-value-hum {
+  font-size: 15px;
+  margin-left: 20px;
+  font-weight: 700;
+  color: #3febe6;
+}
+
+.metric-value-tem {
+  font-size: 15px;
+  margin-left: 20px;
+  font-weight: 700;
+  color: #f47338;
+}
+
+
+/* --- META INFO (MANTENIDO DE TU CÓDIGO) --- */
 .plant-meta {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  
+  margin-top: 8px;
   font-size: 12px;
-  color: #999;
 }
 
-.plant-aspecto {
-  background: #f5f5f5;
-  padding: 4px 8px;
-  border-radius: 4px;
-  
+.meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.meta-label {
+  font-size: 11px;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.meta-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: #2c3e50;
   text-transform: capitalize;
 }
 
-.plant-date {
-  font-size: 11px;
-}
-
+/* --- FOOTER Y BOTÓN (MANTENIDO) --- */
 .plant-card-footer {
   padding: 12px 16px;
   border-top: 1px solid #e1e5e9;
@@ -157,9 +196,8 @@
   background: #4CAF50;
   color: white;
   border: none;
-  padding: 8px 16px;
-  
-  border-radius: 6px;
+  padding: 10px 16px;
+  border-radius: 8px;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
@@ -169,19 +207,24 @@
 .btn-view-details:hover {
   background: #45a049;
 }
-.plant-card {
-  cursor: pointer;
-  transition: transform 0.2s;
+
+/* --- CLASES PARA ESTADOS (compatibilidad) --- */
+.Saludable {
+  background: #e8f5e8 !important;
+  color: #2e7d32 !important;
 }
 
-.plant-card:hover {
-  transform: translateY(-5px);
-}
-.plant-card {
-  cursor: pointer;
-  transition: transform 0.2s;
+.Necesita_Agua {
+  background: #fff3e0 !important;
+  color: #ff9800 !important;
 }
 
-.plant-card:hover {
-  transform: translateY(-5px);
+.Critica {
+  background: #ffebee !important;
+  color: #c62828 !important;
+}
+
+.Normal {
+  background: #e3f2fd !important;
+  color: #1976d2 !important;
 }

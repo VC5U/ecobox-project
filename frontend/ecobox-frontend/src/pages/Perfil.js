@@ -5,6 +5,10 @@ import { useAuth } from '../context/AuthContext';
 import { profileService } from '../services/profileService';
 import './Profile.css';
 
+// Opcional: instalar react-icons si quieres iconos más profesionales
+// npm install react-icons
+// import { FaUser, FaEnvelope, FaCalendarAlt, FaEdit, FaSave, FaTimes, FaLock, FaKey, FaPaintBrush, FaPalette, FaMagic, FaShieldAlt, FaSignOutAlt, FaArrowLeft, FaChartBar, FaLeaf, FaTint, FaSeedling } from 'react-icons/fa';
+
 const Perfil = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -207,6 +211,13 @@ const Perfil = () => {
     setTimeout(() => setMessage(''), 2000);
   };
 
+  const handleCancel = () => {
+    setEditing(false);
+    fetchUserProfile();
+    setMessage('');
+    setError('');
+  };
+
   if (loading) {
     return (
       <div className="profile-container">
@@ -220,14 +231,19 @@ const Perfil = () => {
 
   return (
     <div className="profile-container">
+      {/* Encabezado */}
       <div className="profile-header">
-        <h1><span className="icon">👤</span> Mi Perfil</h1>
-        <p>Gestiona tu información personal</p>
+        <h1>
+          <span className="icon">👤</span> Mi Perfil
+        </h1>
+        <p>Gestiona tu información personal y preferencias</p>
       </div>
 
+      {/* Contenido Principal - Grid de 2 columnas */}
       <div className="profile-content">
-        {/* Sidebar con información de cuenta */}
-        <div className="profile-sidebar">
+        {/* === COLUMNA IZQUIERDA: Sidebar === */}
+        <aside className="profile-sidebar">
+          {/* Avatar y Nombre */}
           <div className="avatar-section">
             <div className="avatar-container">
               <img 
@@ -235,107 +251,126 @@ const Perfil = () => {
                 alt={`${formData.nombre} ${formData.apellido}`}
                 className="profile-avatar"
               />
-              <button 
-                className="avatar-change-btn"
-                onClick={cambiarAvatar}
-                title="Cambiar color de avatar"
-              >
-                🎨 Cambiar color
-              </button>
             </div>
             <h2>{formData.nombre} {formData.apellido}</h2>
             <p className="username">@{formData.username}</p>
-            <div className="bio-section">
-              <p className="bio-text">{generatedBio}</p>
-              <button 
-                className="bio-change-btn"
-                onClick={cambiarBio}
-              >
-                🔄 Nueva bio
-              </button>
-            </div>
+            
+            <button 
+              className="avatar-change-btn"
+              onClick={cambiarAvatar}
+              title="Cambiar color de avatar"
+            >
+              <span className="icon">🎨</span> Cambiar color
+            </button>
+          </div>
+
+          {/* Bio */}
+          <div className="bio-section">
+            <p className="bio-text">{generatedBio}</p>
+            <button 
+              className="bio-change-btn"
+              onClick={cambiarBio}
+            >
+              <span className="icon">🔄</span> Nueva bio
+            </button>
             <p className="member-since">
               <span className="icon">📅</span> 
               Miembro desde: {formData.fecha_registro}
             </p>
           </div>
 
+          {/* Estadísticas */}
           {stats && (
             <div className="account-stats">
-              <h3><span className="icon">📊</span> Estadísticas</h3>
+              <h3>
+                <span className="icon">📊</span> Estadísticas
+              </h3>
               <div className="stat-item">
-                <span className="stat-label">Plantas:</span>
+                <span className="stat-label">Plantas registradas</span>
                 <span className="stat-value">{stats.plantas_count || 0}</span>
               </div>
               <div className="stat-item">
-                <span className="stat-label">Mediciones:</span>
+                <span className="stat-label">Mediciones</span>
                 <span className="stat-value">{stats.mediciones_count || 0}</span>
               </div>
               <div className="stat-item">
-                <span className="stat-label">Riegos hoy:</span>
+                <span className="stat-label">Riegos hoy</span>
                 <span className="stat-value">{stats.riegos_hoy || 0}</span>
               </div>
               <div className="stat-item">
-                <span className="stat-label">Semanas activo:</span>
+                <span className="stat-label">Semanas activo</span>
                 <span className="stat-value">{stats.semanas_activo || 1}</span>
               </div>
             </div>
           )}
 
+          {/* Acciones */}
           <div className="sidebar-actions">
             <button 
               className="btn-secondary"
               onClick={() => navigate('/dashboard')}
             >
-              ← Volver al Dashboard
+              <span className="icon">←</span> Volver al Dashboard
             </button>
             
             <button 
               className="btn-change-password"
               onClick={() => setShowPasswordForm(!showPasswordForm)}
             >
-              🔐 Cambiar Contraseña
+              <span className="icon">🔐</span> Cambiar Contraseña
             </button>
             
             <button 
               className="btn-logout"
               onClick={handleLogout}
             >
-              🚪 Cerrar Sesión
+              <span className="icon">🚪</span> Cerrar Sesión
             </button>
           </div>
-        </div>
+        </aside>
 
-        {/* Formulario principal */}
-        <div className="profile-form-section">
+        {/* === COLUMNA DERECHA: Formulario Principal === */}
+        <main className="profile-form-section">
+          {/* Encabezado del Formulario */}
           <div className="form-header">
-            <h2>Información Personal</h2>
-            {!editing ? (
-              <button 
-                className="btn-edit"
-                onClick={() => setEditing(true)}
-              >
-                ✏️ Editar Perfil
-              </button>
-            ) : (
-              <div className="edit-actions">
+            <h2>
+              <span className="icon">👤</span> Información Personal
+            </h2>
+            <div className="edit-actions">
+              {!editing ? (
                 <button 
-                  className="btn-cancel"
-                  onClick={() => {
-                    setEditing(false);
-                    fetchUserProfile();
-                  }}
+                  className="btn-edit"
+                  onClick={() => setEditing(true)}
                 >
-                  ❌ Cancelar
+                  <span className="icon">✏️</span> Editar Perfil
                 </button>
-              </div>
-            )}
+              ) : (
+                <>
+                  <button 
+                    className="btn-cancel"
+                    onClick={handleCancel}
+                  >
+                    <span className="icon">❌</span> Cancelar
+                  </button>
+                  <button 
+                    type="submit" 
+                    form="profile-form"
+                    className="btn-save"
+                    disabled={saving}
+                  >
+                    <span className="icon">💾</span> {saving ? 'Guardando...' : 'Guardar'}
+                  </button>
+                </>
+              )}
+            </div>
           </div>
 
+          {/* Mensajes de Feedback */}
           {message && <div className="success-message">{message}</div>}
           {error && <div className="error-message">{error}</div>}
 
-          <form onSubmit={handleSubmit} className="profile-form">
+          {/* Formulario Principal */}
+          <form id="profile-form" onSubmit={handleSubmit} className="profile-form">
             <div className="form-row">
               <div className="form-group">
                 <label htmlFor="nombre">Nombre *</label>
@@ -349,6 +384,7 @@ const Perfil = () => {
                   disabled={!editing}
                 />
               </div>
+              
               <div className="form-group">
                 <label htmlFor="apellido">Apellido</label>
                 <input
@@ -375,6 +411,7 @@ const Perfil = () => {
                 />
                 <small className="field-note">El email no se puede cambiar</small>
               </div>
+              
               <div className="form-group">
                 <label htmlFor="username">Nombre de Usuario *</label>
                 <input
@@ -398,6 +435,7 @@ const Perfil = () => {
                 value={formData.telefono}
                 onChange={handleChange}
                 disabled={!editing}
+                placeholder="Ej: +34 123 456 789"
               />
             </div>
 
@@ -417,7 +455,9 @@ const Perfil = () => {
           {/* Formulario de cambio de contraseña */}
           {showPasswordForm && (
             <div className="password-form-section">
-              <h3><span className="icon">🔐</span> Cambiar Contraseña</h3>
+              <h3>
+                <span className="icon">🔐</span> Cambiar Contraseña
+              </h3>
               
               <form onSubmit={handlePasswordChange} className="password-form">
                 <div className="form-group">
@@ -481,7 +521,9 @@ const Perfil = () => {
 
           {/* Sección de personalización */}
           <div className="generation-section">
-            <h3><span className="icon">🎨</span> Personalización</h3>
+            <h3>
+              <span className="icon">🎨</span> Personalización
+            </h3>
             <div className="generation-info">
               <p>
                 <strong>Avatar:</strong> Generado automáticamente con tus iniciales. 
@@ -493,15 +535,15 @@ const Perfil = () => {
               </p>
               <div className="generation-buttons">
                 <button onClick={cambiarAvatar} className="gen-btn">
-                  🎨 Cambiar color de avatar
+                  <span className="icon">🎨</span> Cambiar color de avatar
                 </button>
                 <button onClick={cambiarBio} className="gen-btn">
-                  🔄 Generar nueva bio
+                  <span className="icon">🔄</span> Generar nueva bio
                 </button>
               </div>
             </div>
           </div>
-        </div>
+        </main>
       </div>
     </div>
   );

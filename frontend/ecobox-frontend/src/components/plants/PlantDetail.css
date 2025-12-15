@@ -1,25 +1,27 @@
 /* src/components/plants/PlantDetail.css */
 
-/* Contenedor principal */
+/* --- Estilo General EcoBox --- */
 .plant-detail {
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
+  min-height: 100vh;
 }
 
-/* Header */
+/* --- Header --- */
 .plant-detail-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px;
+  padding: 20px 24px;
   background: white;
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  margin-bottom: 24px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  margin-bottom: 20px;
+  border: 1px solid #eee;
 }
 
-.back-button {
+.back-buttons {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -28,20 +30,38 @@
   color: white;
   border: none;
   border-radius: 8px;
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
-.back-button:hover {
+.back-buttons:hover {
   background: #45a049;
-  transform: translateX(-3px);
+  transform: translateX(-2px);
 }
 
 .header-actions {
   display: flex;
   gap: 12px;
+}
+.btn-small {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.back-small:hover {
+  background: #45a049;
+  transform: translateX(-2px);
 }
 
 .btn {
@@ -84,21 +104,17 @@
   background: #45a049;
 }
 
-.btn-sm {
-  padding: 6px 12px;
-  font-size: 12px;
-}
-
-/* Plant Overview */
+/* --- Plant Overview --- */
 .plant-overview {
   display: grid;
-  grid-template-columns: 1fr 2fr;
-  gap: 32px;
+  grid-template-columns: 300px 1fr;
+  gap: 28px;
   background: white;
   border-radius: 12px;
   padding: 24px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
   margin-bottom: 24px;
+  border: 1px solid #eee;
 }
 
 .plant-image-section {
@@ -107,21 +123,22 @@
 
 .plant-main-image {
   width: 100%;
-  height: 300px;
+  height: 280px;
   object-fit: cover;
   border-radius: 12px;
 }
 
 .plant-image-placeholder {
   width: 100%;
-  height: 300px;
-  background: #f0f0f0;
+  height: 280px;
+  background: #f5f5f5;
   border-radius: 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   color: #888;
+  border: 1px dashed #ddd;
 }
 
 .placeholder-icon {
@@ -146,8 +163,6 @@
   color: white;
   font-weight: 500;
   font-size: 14px;
-  backdrop-filter: blur(4px);
-  background: rgba(0,0,0,0.1);
 }
 
 .plant-info {
@@ -163,18 +178,18 @@
 }
 
 .plant-name {
-  font-size: 32px;
+  font-size: 28px;
   font-weight: 700;
   color: #2c3e50;
-  margin: 0;
+  margin: 0 0 8px 0;
 }
 
 .plant-id-badge {
   background: #e3f2fd;
   color: #2196F3;
-  padding: 4px 12px;
+  padding: 6px 14px;
   border-radius: 20px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
 }
 
@@ -194,19 +209,39 @@
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 16px;
-  margin-top: 8px;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #f0f0f0;
 }
 
+.meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
 
-/* Navigation Tabs */
+.meta-label {
+  font-size: 13px;
+  color: #6c757d;
+  font-weight: 500;
+}
+
+.meta-value {
+  font-size: 15px;
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+/* --- Navigation Tabs --- */
 .plant-detail-tabs {
   display: flex;
   gap: 4px;
   background: white;
   padding: 4px;
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
   margin-bottom: 24px;
+  border: 1px solid #eee;
   overflow-x: auto;
 }
 
@@ -215,12 +250,12 @@
   padding: 16px 24px;
   border: none;
   background: transparent;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 500;
   color: #666;
   cursor: pointer;
   border-radius: 8px;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -229,8 +264,7 @@
 }
 
 .tab-button:hover {
-  background: #f5f5f5;
-  color: #333;
+  background: #f8f9fa;
 }
 
 .tab-button.active {
@@ -238,93 +272,264 @@
   color: white;
 }
 
-/* Tab Content */
+/* --- Tab Content --- */
 .tab-content {
   background: white;
   border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  padding: 28px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
   margin-bottom: 30px;
+  border: 1px solid #eee;
 }
 
-/* Overview Tab */
+/* --- Overview Tab - Nuevo Estilo EcoBox --- */
 .overview-tab {
   display: flex;
   flex-direction: column;
-  gap: 30px;
+  gap: 24px;
 }
 
+/* Grid de métricas en horizontal */
 .metrics-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  display: flex;
   gap: 20px;
 }
 
+/* Tarjetas de métricas estilo EcoBox */
 .metric-card {
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  background: white;
   padding: 20px;
   border-radius: 12px;
   display: flex;
-  align-items: center;
-  gap: 16px;
-  transition: transform 0.3s ease;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+  border: 1px solid #eee;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
 .metric-card:hover {
   transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
 
 .metric-icon {
-  font-size: 32px;
-  background: white;
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  display: none;
 }
 
 .metric-info {
   display: flex;
   flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.metric-label {
+  font-size: 14px;
+  color: #6c757d;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
 }
 
 .metric-value {
   font-size: 28px;
   font-weight: 700;
   color: #2c3e50;
+  margin: 0;
 }
 
-.metric-label {
+/* Barras de progreso */
+.progress-bar-container {
+  width: 100%;
+  height: 8px;
+  background-color: #e9ecef;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+.range-text {
+  font-size: 13px;
+  color: #6c757d;
+  margin-top: 8px;
+  font-weight: 500;
+}
+
+/* --- Predicción IA --- */
+.ai-prediction-card {
+  background: #f3f0f7;
+  border-radius: 12px;
+  padding: 24px;
+  border: 1px solid #e0d7ed;
+  margin-top: 8px;
+}
+
+.ai-prediction-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  color: #673ab7;
+  margin-bottom: 16px;
+  font-size: 18px;
+}
+
+.ai-prediction-text {
+  font-size: 16px;
+  color: #343a40;
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+.ai-prediction-probability {
+  font-size: 15px;
+  font-weight: 600;
+  color: #673ab7;
+  padding: 8px 16px;
+  background: rgba(103, 58, 183, 0.1);
+  border-radius: 8px;
+  display: inline-block;
+}
+
+/* --- Control de Riego --- */
+.water-control-card {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  border: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.water-control-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.water-control-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #343a40;
+  margin: 0;
+}
+
+.water-control-subtitle {
   font-size: 14px;
-  color: #666;
-  margin-top: 4px;
+  color: #6c757d;
+  margin: 0;
 }
 
-/* Info Section */
+.water-control-card .btn-primary {
+  background: #4CAF50;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+}
+
+.water-control-card .btn-primary:hover {
+  background: #45a049;
+  transform: scale(1.05);
+}
+
+/* --- Sección de gráfico --- */
+.chart-section {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.chart-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin: 0 0 20px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.chart-placeholder {
+  height: 250px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #6c757d;
+  border: 1px dashed #dee2e6;
+}
+
+.chart-placeholder .empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.7;
+}
+
+.chart-view-all {
+  color: #4CAF50;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.chart-view-all:hover {
+  color: #45a049;
+  text-decoration: underline;
+}
+
+/* --- Info Section --- */
 .info-section {
-  padding-top: 20px;
-  border-top: 2px solid #f0f0f0;
+  padding-top: 24px;
+  margin-top: 32px;
+  border-top: 1px solid #f0f0f0;
 }
 
 .info-section h3 {
   margin: 0 0 20px 0;
   color: #2c3e50;
+  font-size: 18px;
+  font-weight: 600;
 }
 
 .info-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 15px;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 16px;
 }
 
 .info-item {
   background: #f8f9fa;
-  padding: 15px;
+  padding: 16px;
   border-radius: 8px;
   border-left: 4px solid #4CAF50;
+  transition: transform 0.2s;
+}
+
+.info-item:hover {
+  transform: translateY(-2px);
 }
 
 .info-label {
@@ -341,17 +546,20 @@
   color: #2c3e50;
 }
 
-/* Alerts Section */
+/* --- Alertas --- */
 .alerts-section {
   background: #fff3cd;
-  border-left: 4px solid #ffc107;
-  border-radius: 8px;
+  border-radius: 12px;
   padding: 20px;
+  border: 1px solid #ffecb5;
+  margin-top: 24px;
 }
 
 .alerts-section h3 {
   margin: 0 0 16px 0;
   color: #856404;
+  font-size: 16px;
+  font-weight: 600;
 }
 
 .alert-item {
@@ -386,7 +594,7 @@
   font-size: 14px;
 }
 
-/* Sensors Tab */
+/* --- Sensores Tab --- */
 .sensors-tab {
   display: flex;
   flex-direction: column;
@@ -397,11 +605,14 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f0f0f0;
 }
 
 .sensors-header h3 {
   margin: 0;
   color: #2c3e50;
+  font-size: 20px;
 }
 
 .empty-sensors {
@@ -429,7 +640,7 @@
 
 .sensors-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 20px;
 }
 
@@ -442,9 +653,8 @@
 }
 
 .sensor-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 25px rgba(0,0,0,0.1);
   border-color: #4CAF50;
+  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.1);
 }
 
 .sensor-header {
@@ -505,7 +715,7 @@
   color: #6c757d;
 }
 
-/* Config Tab */
+/* --- Config Tab --- */
 .config-tab {
   display: flex;
   flex-direction: column;
@@ -513,8 +723,11 @@
 }
 
 .config-tab h3 {
-  margin: 0;
+  margin: 0 0 24px 0;
   color: #2c3e50;
+  font-size: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f0f0f0;
 }
 
 .config-form {
@@ -529,8 +742,13 @@
   align-items: center;
   padding: 20px;
   background: #f8f9fa;
-  border-radius: 8px;
+  border-radius: 12px;
   border-left: 4px solid #2196F3;
+  transition: all 0.2s;
+}
+
+.config-item:hover {
+  background: #e9ecef;
 }
 
 .config-item label {
@@ -558,7 +776,7 @@
   border: 2px dashed #dee2e6;
 }
 
-/* History Tab */
+/* --- History Tab --- */
 .history-tab {
   display: flex;
   flex-direction: column;
@@ -566,8 +784,11 @@
 }
 
 .history-tab h3 {
-  margin: 0;
+  margin: 0 0 24px 0;
   color: #2c3e50;
+  font-size: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f0f0f0;
 }
 
 .history-empty {
@@ -578,37 +799,7 @@
   border: 2px dashed #dee2e6;
 }
 
-/* Debug Section */
-.debug-section {
-  background: #f8f9fa;
-  border-radius: 8px;
-  padding: 20px;
-  margin-top: 30px;
-  border: 1px dashed #ccc;
-}
-
-.debug-section summary {
-  cursor: pointer;
-  font-weight: bold;
-  color: #666;
-  margin-bottom: 10px;
-  display: block;
-}
-
-.debug-content {
-  margin-top: 15px;
-}
-
-.debug-content pre {
-  background: white;
-  padding: 15px;
-  border-radius: 6px;
-  overflow: auto;
-  font-size: 12px;
-  margin-top: 10px;
-}
-
-/* Modal de eliminación - Mantener del primer código */
+/* --- Modal de eliminación --- */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -736,12 +927,7 @@
   margin-right: 8px;
 }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-/* Loading & Error States */
+/* --- Loading & Error States --- */
 .loading-container {
   display: flex;
   flex-direction: column;
@@ -760,6 +946,11 @@
   margin-bottom: 20px;
 }
 
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 .error-container {
   text-align: center;
   padding: 50px 20px;
@@ -769,18 +960,19 @@
   margin-top: 20px;
 }
 
-/* Responsive */
+/* --- Responsive --- */
 @media (max-width: 768px) {
   .plant-overview {
     grid-template-columns: 1fr;
+    gap: 24px;
   }
   
-  .plant-meta-grid {
-    grid-template-columns: 1fr;
+  .plant-main-image {
+    height: 240px;
   }
   
   .metrics-grid {
-    grid-template-columns: 1fr;
+    flex-direction: column;
   }
   
   .sensors-grid {
@@ -794,7 +986,24 @@
   .tab-button {
     flex: 1 0 calc(50% - 8px);
     font-size: 14px;
-    padding: 12px 16px;
+    padding: 14px 16px;
+  }
+  
+  .water-control-card {
+    flex-direction: column;
+    gap: 20px;
+    text-align: center;
+  }
+  
+  .plant-detail-header {
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
+  }
+  
+  .header-actions {
+    width: 100%;
+    justify-content: flex-end;
   }
   
   .modal-actions {
@@ -804,4 +1013,61 @@
   .modal-actions .btn {
     width: 100%;
   }
+}/* Añade al final del archivo */
+
+.sensor-meta {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.plant-image-placeholder {
+  width: 200px;
+  height: 200px;
+  background: linear-gradient(135deg, #e0f7fa 0%, #80deea 100%);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed #4db6ac;
+}
+
+.placeholder-icon {
+  font-size: 48px;
+  margin-bottom: 10px;
+}
+
+.placeholder-text {
+  color: #00796b;
+  font-weight: 500;
+}
+
+/* Asegurar que las imágenes se muestren correctamente */
+.plant-main-image {
+  width: 200px;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 2px solid #4db6ac;
+}
+
+/* Mejorar las tarjetas de sensores */
+.sensor-card {
+  transition: all 0.3s ease;
+  border: 1px solid #e0e0e0;
+}
+
+.sensor-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0, 188, 212, 0.15);
+  border-color: #00bcd4;
 }

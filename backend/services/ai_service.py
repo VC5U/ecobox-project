@@ -48,7 +48,19 @@ elif AI_PROVIDER == 'gemini' and GOOGLE_API_KEY:
     except ImportError:
         print("❌ google-generativeai no instalado. Ejecuta: pip install google-generativeai")
         AI_PROVIDER = 'simulated'
-
+try:
+    from .ai_predictions import (
+        predict_watering,
+        predict_health,
+        analyze_plant,
+        batch_analyze,
+        get_plant_context
+    )
+    ADVANCED_PREDICTIONS_AVAILABLE = True
+    print("✅ Sistema de predicciones avanzadas cargado")
+except ImportError as e:
+    print(f"⚠️ Sistema de predicciones avanzadas no disponible: {e}")
+    ADVANCED_PREDICTIONS_AVAILABLE = False
 else:
     print("⚠️ Usando modo simulado")
     AI_PROVIDER = 'simulated'
