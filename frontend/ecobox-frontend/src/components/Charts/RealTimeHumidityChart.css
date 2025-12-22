@@ -1,0 +1,30 @@
+/* Añade esto a tu RealTimeHumidityChart.css */
+.chart-warning {
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  color: #856404;
+  padding: 10px 15px;
+  border-radius: 6px;
+  margin-bottom: 15px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chart-warning.warning {
+  background: #fff3cd;
+  border-color: #ffeaa7;
+  color: #856404;
+}
+
+.chart-warning.offline {
+  background: #e7f5ff;
+  border-color: #a5d8ff;
+  color: #1971c2;
+}
+
+.chart-warning::before {
+  content: 'ℹ️';
+  font-size: 16px;
+}

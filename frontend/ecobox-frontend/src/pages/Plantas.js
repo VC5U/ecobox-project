@@ -4,6 +4,7 @@ import { Routes, Route, useNavigate, useParams } from 'react-router-dom';
 import PlantList from '../components/plants/PlantList';
 import PlantForm from '../components/plants/PlantForm';
 import PlantDetail from '../components/plants/PlantDetail';
+import PlantEdit from '../components/plants/PlantEdit';
 import Seguimiento from '../components/plants/Seguimiento'; // ✅ Nombre correcto
 import SeguimientoForm from '../components/plants/SeguimientoForm';
 import { usePlantas } from '../hooks/usePlantas';
@@ -19,7 +20,7 @@ const Plantas = () => {
         <Route index element={<PlantasLista />} />
         <Route path="nueva" element={<PlantasFormulario />} />
         <Route path=":id" element={<PlantasDetalle />} />
-        <Route path=":id/editar" element={<PlantasEditar />} />
+        <Route path=":id/editar" element={<PlantEdit />} />
 <Route path=":id/seguimiento" element={<PlantasSeguimiento />} /> 
         <Route path=":id/seguimiento/nuevo" element={<PlantasNuevoSeguimiento />} /> 
               </Routes>
@@ -249,7 +250,7 @@ const PlantasEditar = () => {
   }
 
   return (
-    <PlantForm
+    <PlantEdit
       plantaExistente={plantaExistente}
       onSubmit={handleSubmit}
       onCancel={handleCancel}

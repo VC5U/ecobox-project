@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { plantasService } from '../../services/plantasService';
+import historialService from '../../services/historialService';
 import './PlantDetail.css';
 
 // Componente Auxiliar para las tarjetas de métricas estilo EcoBox
@@ -794,21 +795,382 @@ const ConfigTab = ({ configuracion, plantId }) => {
   );
 };
 
-// Componente para la pestaña de Historial
+// Componente para la pestaña de Historial - VERSIÓN COMPLETA
+// Componente para la pestaña de Historial - VERSIÓN CORREGIDA
 const HistoryTab = ({ plantId }) => {
+  const navigate = useNavigate();
+  const [historialData, setHistorialData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [dateRange, setDateRange] = useState('7d');
+  const [viewMode, setViewMode] = useState('timeline');
+
+  useEffect(() => {
+    cargarHistorial();
+  }, [plantId, dateRange]);
+
+  const cargarHistorial = async () => {
+    try {
+      setLoading(true);
+      
+      // ✅ USAR historialService en lugar de plantasService
+      const data = await historialService.getHistorialPlanta(plantId);
+      setHistorialData(data);
+      
+    } catch (error) {
+      console.error('Error cargando historial:', error);
+      // Datos demo como fallback
+      setHistorialData(generarHistorialDemo(plantId));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleViewFullHistory = () => {
+    navigate(`/plantas/${plantId}/historial`);
+  };
+
+  const formatDateTime = (dateString) => {
+    return new Date(dateString).toLocaleString('es-ES', {
+      day: 'numeric',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('es-ES', {
+      day: 'numeric',
+      month: 'short'
+    });
+  };
+
+  const getEventIcon = (tipo) => {
+    const icons = {
+      riego: '💧',
+      fertilizacion: '🌱',
+      poda: '✂️',
+      trasplante: '🔄',
+      alerta: '⚠️',
+      medicion: '📊',
+      configuracion: '⚙️'
+    };
+    return icons[tipo] || '📝';
+  };
+
+  const getSensorIcon = (tipo) => {
+    const icons = {
+      temperatura: '🌡️',
+      humedad: '💧',
+      luz: '💡',
+      ph: '🧪'
+    };
+    return icons[tipo] || '📡';
+  };
+
+  // Función demo interna
+  const generarHistorialDemo = (plantId) => {
+    const ahora = new Date();
+    const eventos = [];
+    const mediciones = [];
+    
+    // Generar eventos de ejemplo
+    const eventosTipos = ['riego', 'fertilizacion', 'alerta', 'medicion'];
+    for (let i = 0; i < 15; i++) {
+      const tipo = eventosTipos[Math.floor(Math.random() * eventosTipos.length)];
+      const fecha = new Date(ahora.getTime() - (i * 24 * 60 * 60 * 1000));
+      
+      let descripcion = '';
+      switch(tipo) {
+        case 'riego':
+          descripcion = `Riego automático realizado`;
+          break;
+        case 'fertilizacion':
+          descripcion = `Aplicación de fertilizante NPK`;
+          break;
+        case 'alerta':
+          descripcion = `Alerta: Humedad crítica detectada`;
+          break;
+        default:
+          descripcion = `Medición periódica de sensores`;
+      }
+      
+      eventos.push({
+        id: i,
+        fecha: fecha.toISOString(),
+        tipo: tipo,
+        descripcion: descripcion,
+        usuario: i % 3 === 0 ? 'Sistema' : 'Usuario',
+        detalles: tipo === 'riego' ? '500ml aplicados' : 'Evento registrado'
+      });
+    }
+    
+    // Generar mediciones de ejemplo
+    for (let i = 0; i < 24; i++) {
+      const fecha = new Date(ahora.getTime() - (i * 60 * 60 * 1000));
+      const tipo = i % 2 === 0 ? 'humedad' : 'temperatura';
+      
+      mediciones.push({
+        id: i,
+        fecha: fecha.toISOString(),
+        tipo_sensor: tipo,
+        valor: tipo === 'humedad' ? 60 + Math.sin(i/3) * 15 : 22 + Math.sin(i/6) * 5,
+        unidad: tipo === 'humedad' ? '%' : '°C'
+      });
+    }
+    
+    return {
+      resumen: {
+        totalRegistros: 142,
+        sensoresActivos: 2,
+        ultimoRegistro: ahora.toISOString()
+      },
+      eventos: eventos.sort((a, b) => new Date(b.fecha) - new Date(a.fecha)),
+      ultimasMediciones: mediciones.sort((a, b) => new Date(b.fecha) - new Date(a.fecha)),
+      estadisticas: {
+        humedad: { promedio: 68, maximo: 85, minimo: 45 },
+        temperatura: { promedio: 24, maximo: 31, minimo: 18 },
+        eventos: { riegos: 8, alertas: 3, total: 15 }
+      }
+    };
+  };
+
+  if (loading) {
+    return (
+      <div className="loading-container">
+        <div className="spinner"></div>
+        <p>Cargando historial...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="history-tab">
-      <h3>Historial de la Planta</h3>
-      <div className="history-empty">
-        <div className="empty-icon">📈</div>
-        <h4>Próximamente</h4>
-        <p>El historial detallado de mediciones y eventos estará disponible pronto</p>
-        <button className="btn btn-primary" style={{ marginTop: '20px' }}>
-          Ver Registros Recientes
+      <div className="history-header">
+        <h3>Historial de la Planta</h3>
+        <div className="history-header-actions">
+          <select 
+            value={dateRange} 
+            onChange={(e) => setDateRange(e.target.value)}
+            className="history-filter"
+          >
+            <option value="24h">Últimas 24h</option>
+            <option value="7d">Últimos 7 días</option>
+            <option value="30d">Últimos 30 días</option>
+            <option value="all">Todo el historial</option>
+          </select>
+          
+          <button 
+            onClick={handleViewFullHistory}
+            className="btn btn-primary"
+          >
+            Ver Historial Completo
+          </button>
+        </div>
+      </div>
+
+      {/* Estadísticas rápidas */}
+      <div className="history-stats-overview">
+        <div className="history-stat-card">
+          <div className="stat-icon">📊</div>
+          <div className="stat-content">
+            <div className="stat-value">{historialData?.resumen?.totalRegistros || 0}</div>
+            <div className="stat-label">Registros totales</div>
+          </div>
+        </div>
+        
+        <div className="history-stat-card">
+          <div className="stat-icon">💧</div>
+          <div className="stat-content">
+            <div className="stat-value">{historialData?.estadisticas?.eventos?.riegos || 0}</div>
+            <div className="stat-label">Riegos</div>
+          </div>
+        </div>
+        
+        <div className="history-stat-card">
+          <div className="stat-icon">⚠️</div>
+          <div className="stat-content">
+            <div className="stat-value">{historialData?.estadisticas?.eventos?.alertas || 0}</div>
+            <div className="stat-label">Alertas</div>
+          </div>
+        </div>
+        
+        <div className="history-stat-card">
+          <div className="stat-icon">📡</div>
+          <div className="stat-content">
+            <div className="stat-value">{historialData?.resumen?.sensoresActivos || 0}</div>
+            <div className="stat-label">Sensores</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Selector de vista */}
+      <div className="view-mode-selector">
+        <button 
+          className={`view-mode-btn ${viewMode === 'timeline' ? 'active' : ''}`}
+          onClick={() => setViewMode('timeline')}
+        >
+          📅 Línea de tiempo
+        </button>
+        <button 
+          className={`view-mode-btn ${viewMode === 'charts' ? 'active' : ''}`}
+          onClick={() => setViewMode('charts')}
+        >
+          📊 Gráficos
+        </button>
+        <button 
+          className={`view-mode-btn ${viewMode === 'events' ? 'active' : ''}`}
+          onClick={() => setViewMode('events')}
+        >
+          📋 Eventos
+        </button>
+      </div>
+
+      {/* Contenido según vista */}
+      <div className="history-content">
+        {viewMode === 'timeline' && (
+          <div className="timeline-view">
+            <h4>Línea de Tiempo</h4>
+            <div className="timeline-container">
+              {[...(historialData?.eventos || []).slice(0, 10), 
+                ...(historialData?.ultimasMediciones || []).slice(0, 10)]
+                .sort((a, b) => new Date(b.fecha) - new Date(a.fecha))
+                .map((item, index) => (
+                  <div key={`${item.id}-${index}`} className="timeline-item">
+                    <div className="timeline-marker">
+                      {item.tipo_sensor ? getSensorIcon(item.tipo_sensor) : getEventIcon(item.tipo)}
+                    </div>
+                    <div className="timeline-content">
+                      <div className="timeline-header">
+                        <span className="timeline-title">
+                          {item.tipo_sensor 
+                            ? `Medición: ${item.valor}${item.unidad}` 
+                            : item.descripcion}
+                        </span>
+                        <span className="timeline-time">
+                          {formatDateTime(item.fecha)}
+                        </span>
+                      </div>
+                      <div className="timeline-details">
+                        {item.tipo_sensor 
+                          ? <span className="sensor-type">Tipo: {item.tipo_sensor}</span>
+                          : <span className="event-type">Evento: {item.tipo}</span>
+                        }
+                        {item.usuario && <span className="event-user">Por: {item.usuario}</span>}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </div>
+        )}
+
+        {viewMode === 'charts' && (
+          <div className="charts-view">
+            <h4>Gráficos de Datos</h4>
+            <div className="charts-grid">
+              <div className="chart-card">
+                <h5>Humedad - Últimas 24h</h5>
+                <div className="chart-container">
+                  <div className="simple-chart">
+                    {historialData?.ultimasMediciones
+                      ?.filter(m => m.tipo_sensor === 'humedad')
+                      .slice(0, 12)
+                      .map((medicion, index) => (
+                        <div key={index} className="chart-bar">
+                          <div 
+                            className="bar-fill"
+                            style={{ 
+                              height: `${Math.min(100, medicion.valor)}%`,
+                              backgroundColor: medicion.valor < 50 ? '#f44336' : 
+                                            medicion.valor < 65 ? '#ff9800' : '#4CAF50'
+                            }}
+                            title={`${medicion.valor}%`}
+                          ></div>
+                          <div className="bar-label">
+                            {new Date(medicion.fecha).getHours()}:00
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+                <div className="chart-stats">
+                  <span>Prom: {historialData?.estadisticas?.humedad?.promedio || 0}%</span>
+                  <span>Máx: {historialData?.estadisticas?.humedad?.maximo || 0}%</span>
+                  <span>Mín: {historialData?.estadisticas?.humedad?.minimo || 0}%</span>
+                </div>
+              </div>
+
+              <div className="chart-card">
+                <h5>Distribución de Eventos</h5>
+                <div className="events-distribution">
+                  {['riego', 'alerta', 'fertilizacion', 'poda'].map((tipo, index) => {
+                    const count = historialData?.eventos?.filter(e => e.tipo === tipo).length || 0;
+                    const total = historialData?.eventos?.length || 1;
+                    const percentage = Math.round((count / total) * 100);
+                    
+                    return (
+                      <div key={tipo} className="distribution-item">
+                        <div className="distribution-header">
+                          <span className="distribution-icon">{getEventIcon(tipo)}</span>
+                          <span className="distribution-label">{tipo}</span>
+                          <span className="distribution-count">{count}</span>
+                        </div>
+                        <div className="distribution-bar">
+                          <div 
+                            className="distribution-fill"
+                            style={{ width: `${percentage}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {viewMode === 'events' && (
+          <div className="events-table-view">
+            <h4>Últimos Eventos</h4>
+            <div className="events-table">
+              <div className="table-header">
+                <div className="table-col fecha">Fecha</div>
+                <div className="table-col tipo">Tipo</div>
+                <div className="table-col descripcion">Descripción</div>
+                <div className="table-col usuario">Usuario</div>
+              </div>
+              
+              <div className="table-body">
+                {historialData?.eventos?.slice(0, 10).map((evento, index) => (
+                  <div key={index} className="table-row">
+                    <div className="table-col fecha">{formatDate(evento.fecha)}</div>
+                    <div className="table-col tipo">
+                      <span className={`event-type-badge type-${evento.tipo}`}>
+                        {getEventIcon(evento.tipo)} {evento.tipo}
+                      </span>
+                    </div>
+                    <div className="table-col descripcion">{evento.descripcion}</div>
+                    <div className="table-col usuario">{evento.usuario}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="history-actions">
+        <button 
+          className="btn btn-outline"
+          onClick={() => window.print()}
+          title="Imprimir historial"
+        >
+          🖨️ Imprimir
         </button>
       </div>
     </div>
   );
 };
-
 export default PlantDetail;

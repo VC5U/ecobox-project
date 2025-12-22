@@ -1,4 +1,9 @@
 # backend/services/__init__.py
+
+# Crear instancias singleton
+
+
+__all__ = ['RiegoPredictor', 'MonitoringService', 'RiegoScheduler', 'predictor', 'monitor', 'scheduler']
 print("📦 Inicializando paquete services (OpenAI v2.x)")
 
 try:

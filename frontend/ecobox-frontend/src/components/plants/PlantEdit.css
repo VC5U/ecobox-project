@@ -1,76 +1,90 @@
-/* src/components/plants/PlantEdit.css */
+/* PlantEdit.css - UNIFICADO CON PLANTFORM */
+
 .plant-edit-container {
-  max-width: 800px;
+  max-width: 900px;
   margin: 0 auto;
-  padding: 30px;
-  background: white;
+  padding: 30px 20px;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  background: white;
 }
 
 .edit-header {
   text-align: center;
   margin-bottom: 40px;
-  border-bottom: 2px solid #f0f0f0;
   padding-bottom: 20px;
+  border-bottom: 2px solid #f0f0f0;
 }
 
 .edit-header h1 {
+  font-size: 28px;
   color: #2c3e50;
-  margin: 0 0 10px 0;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
 }
 
 .edit-header p {
   color: #7f8c8d;
-  margin: 0;
+  font-size: 16px;
 }
 
-.plant-edit-form {
-  display: flex;
-  flex-direction: column;
-  gap: 25px;
+/* Secciones */
+.form-section {
+  margin-bottom: 30px;
+  padding: 25px;
+  background: #f8f9fa;
+  border-radius: 10px;
+  border: 1px solid #e9ecef;
+}
+
+.form-section h3 {
+  color: #2c3e50;
+  margin: 0 0 20px 0;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #dee2e6;
+  font-size: 18px;
 }
 
 .form-group {
-  display: flex;
-  flex-direction: column;
+  margin-bottom: 20px;
 }
 
 .form-group label {
-  font-weight: 600;
+  display: block;
   margin-bottom: 8px;
-  color: #34495e;
-  font-size: 15px;
+  font-weight: 600;
+  color: #495057;
+  font-size: 14px;
 }
 
-.form-input, .form-textarea, .form-select {
-  padding: 12px 16px;
-  border: 2px solid #e0e0e0;
+/* Inputs unificados */
+.form-input, .form-select, .form-textarea {
+  width: 100%;
+  padding: 12px 15px;
+  border: 2px solid #dee2e6;
   border-radius: 8px;
-  font-size: 16px;
-  transition: all 0.3s;
-  background: #f9f9f9;
+  font-size: 14px;
+  color: #495057;
+  background: white;
+  transition: all 0.3s ease;
 }
 
-.form-input:focus, .form-textarea:focus, .form-select:focus {
+.form-input:focus, .form-select:focus, .form-textarea:focus {
   outline: none;
   border-color: #4CAF50;
-  background: white;
   box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
-}
-
-.form-textarea {
-  resize: vertical;
-  min-height: 100px;
-  font-family: inherit;
 }
 
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 20px;
+  gap: 25px;
 }
 
+/* Botones */
 .form-actions {
   display: flex;
   justify-content: flex-end;
@@ -81,81 +95,36 @@
 }
 
 .btn {
-  padding: 12px 28px;
+  padding: 12px 30px;
   border: none;
   border-radius: 8px;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s;
-  min-width: 120px;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+  background: #4CAF50;
   color: white;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: linear-gradient(135deg, #45a049 0%, #3d8b40 100%);
+  background: #45a049;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
-}
-
-.btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
 }
 
 .btn-secondary {
-  background: #f8f9fa;
-  color: #666;
-  border: 2px solid #e0e0e0;
+  background: #6c757d;
+  color: white;
 }
 
-.btn-secondary:hover {
-  background: #e9ecef;
-  border-color: #ccc;
-}
-
-.loading-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 400px;
-}
-
-.spinner {
-  width: 50px;
-  height: 50px;
-  border: 5px solid #f3f3f3;
-  border-top: 5px solid #4CAF50;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 20px;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
+/* Responsive */
 @media (max-width: 768px) {
-  .plant-edit-container {
-    padding: 20px;
-    margin: 10px;
-  }
-  
-  .form-row {
-    grid-template-columns: 1fr;
-  }
-  
-  .form-actions {
-    flex-direction: column;
-  }
-  
-  .btn {
-    width: 100%;
-  }
+  .form-row { grid-template-columns: 1fr; }
+  .form-actions { flex-direction: column; }
+  .btn { width: 100%; }
 }

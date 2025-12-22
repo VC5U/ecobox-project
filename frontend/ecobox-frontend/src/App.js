@@ -9,7 +9,9 @@ import ResetPassword from './pages/ResetPassword';
 import Dashboard from './pages/Dashboard';
 import Plantas from './pages/Plantas';
 import Perfil from './pages/Perfil';
-import Configuracion from './pages/Configuracion';
+import Configuracion2 from './pages/Configuracion';
+import Configuracion from './components/AIControlPanel';
+
 import Familia from './components/familia/Familia';
 import Notificaciones from './components/Notificaciones/Notificaciones';
 import Layout from './components/Layout';

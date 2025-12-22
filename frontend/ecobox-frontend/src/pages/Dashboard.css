@@ -655,4 +655,662 @@
     padding: 6px 12px;
     font-size: 14px;
   }
+}/* Dashboard.css - AÑADIR ESTOS ESTILOS */
+
+/* Tarjeta de métrica IA */
+.metricCard.ai {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+}
+
+.metricCard.ai .metricIcon {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Sección de recomendaciones IA */
+.aiRecommendationsSection {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  margin: 24px 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e0e0e0;
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.sectionHeader h3 {
+  margin: 0;
+  color: #333;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.viewAllLink {
+  color: #667eea;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 14px;
+  transition: color 0.2s;
+}
+
+.viewAllLink:hover {
+  color: #764ba2;
+  text-decoration: underline;
+}
+
+.recommendationsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.recommendationCard {
+  padding: 20px;
+  border-radius: 8px;
+  border-left: 4px solid;
+  background: #f8f9fa;
+  transition: transform 0.2s;
+}
+
+.recommendationCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.recommendationCard.urgent {
+  border-left-color: #f44336;
+  background: #ffebee;
+}
+
+.recommendationCard.warning {
+  border-left-color: #ff9800;
+  background: #fff3e0;
+}
+
+.recommendationCard.info {
+  border-left-color: #2196f3;
+  background: #e3f2fd;
+}
+
+.recHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.recBadge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.urgent .recBadge {
+  background: #f44336;
+  color: white;
+}
+
+.warning .recBadge {
+  background: #ff9800;
+  color: white;
+}
+
+.info .recBadge {
+  background: #2196f3;
+  color: white;
+}
+
+.recTime {
+  font-size: 12px;
+  color: #666;
+}
+
+.recText {
+  margin: 0 0 16px 0;
+  color: #333;
+  line-height: 1.5;
+}
+
+.recAction {
+  background: white;
+  border: 1px solid #ddd;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.recAction:hover {
+  background: #f8f9fa;
+  border-color: #adb5bd;
+}
+
+.urgent .recAction {
+  background: #f44336;
+  color: white;
+  border-color: #f44336;
+}
+
+.urgent .recAction:hover {
+  background: #d32f2f;
+}
+
+/* Modal chatbot */
+.chatbotModalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.chatbotModal {
+  background: white;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  overflow: hidden;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.chatbotHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #e0e0e0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.chatbotHeader h3 {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.closeButton {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.closeButton:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.chatbotContent {
+  padding: 20px;
+}
+
+/* Widget container */
+.aiWidgetContainer {
+  margin-top: 10px;
+}
+
+.aiPlaceholder {
+  text-align: center;
+  padding: 30px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 2px dashed #dee2e6;
+}
+
+.aiButtonSmall {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: all 0.2s;
+}
+
+.aiButtonSmall:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+}/* Dashboard.css - AÑADIR estos estilos */
+
+/* Sección de recomendaciones mejorada */
+.aiRecommendationsSection {
+  background: white;
+  border-radius: 16px;
+  padding: 28px;
+  margin: 28px 0;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #f1f5f9;
+}
+
+.sectionHeader h3 {
+  margin: 0;
+  color: #1e293b;
+  font-size: 22px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sectionActions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.viewAllLink {
+  color: #6366f1;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 15px;
+  transition: all 0.2s;
+  padding: 8px 16px;
+  border-radius: 8px;
+}
+
+.viewAllLink:hover {
+  color: #4f46e5;
+  background: #f1f5f9;
+  text-decoration: none;
+}
+
+.refreshRecommendationsButton {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.refreshRecommendationsButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3);
+}
+
+/* Grid de recomendaciones mejorado */
+.recommendationsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 20px;
+  margin-bottom: 28px;
+}
+
+.recommendationCard {
+  padding: 24px;
+  border-radius: 14px;
+  border-left: 6px solid;
+  background: white;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.recommendationCard:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+}
+
+.recommendationCard.urgent {
+  border-left-color: #ef4444;
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+}
+
+.recommendationCard.warning {
+  border-left-color: #f59e0b;
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+}
+
+.recommendationCard.info {
+  border-left-color: #3b82f6;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+}
+
+/* Header de recomendación */
+.recHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.recSeverity {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.recBadge {
+  font-size: 12px;
+  font-weight: 800;
+  padding: 6px 12px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  width: fit-content;
+}
+
+.urgent .recBadge {
+  background: #ef4444;
+  color: white;
+}
+
+.warning .recBadge {
+  background: #f59e0b;
+  color: white;
+}
+
+.info .recBadge {
+  background: #3b82f6;
+  color: white;
+}
+
+.recPriority {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.recTime {
+  font-size: 12px;
+  color: #94a3b8;
+  background: white;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-weight: 500;
+}
+
+/* Contenido de recomendación */
+.recContent {
+  flex: 1;
+}
+
+.recText {
+  margin: 0 0 16px 0;
+  color: #1e293b;
+  font-size: 16px;
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+.recDetails {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 13px;
+}
+
+.recMetric {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #475569;
+  background: rgba(255, 255, 255, 0.7);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+/* Acciones de recomendación */
+.recActions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.recAction {
+  padding: 10px 18px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex: 1;
+  min-width: 120px;
+}
+
+.recAction.primary {
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  color: white;
+}
+
+.recAction.primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.recAction.secondary {
+  background: white;
+  color: #475569;
+  border: 2px solid #cbd5e1;
+}
+
+.recAction.secondary:hover {
+  border-color: #94a3b8;
+  transform: translateY(-2px);
+}
+
+.recAction.tertiary {
+  background: #f1f5f9;
+  color: #64748b;
+  border: none;
+}
+
+.recAction.tertiary:hover {
+  background: #e2e8f0;
+  transform: translateY(-2px);
+}
+
+/* Resumen de recomendaciones */
+.recommendationsSummary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  padding: 24px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  margin-top: 20px;
+}
+
+.summaryItem {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.summaryLabel {
+  font-size: 13px;
+  color: #64748b;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.summaryValue {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.analyticsButton {
+  grid-column: 1 / -1;
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  color: white;
+  border: none;
+  padding: 14px 28px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.analyticsButton:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(139, 92, 246, 0.3);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .sectionHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  
+  .sectionActions {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .recommendationsGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  .recActions {
+    flex-direction: column;
+  }
+  
+  .recAction {
+    min-width: 100%;
+  }
+}/* src/pages/Dashboard.css - Añade al final del archivo */
+
+/* Sección de Alertas */
+.alertsSection {
+  margin: 20px 0;
+  animation: slideIn 0.4s ease;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Si no existe chartsSection en tu CSS, añade también: */
+.chartsSection {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+  margin: 20px 0;
+}
+
+.chartCard {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e9ecef;
+}
+
+.chartCard.fullWidth {
+  grid-column: 1 / -1;
+}
+
+.chartHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.chartHeader h3 {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 18px;
+}
+
+.chartSubtitle {
+  color: #6c757d;
+  font-size: 14px;
+}
+
+/* Estilos para el widget de IA (por si no los tienes) */
+.aiWidgetContainer {
+  margin-top: 15px;
+}
+
+.aiPlaceholder {
+  text-align: center;
+  padding: 20px;
+  color: #6c757d;
+}
+
+.aiButtonSmall {
+  padding: 8px 16px;
+  background: #4dabf7;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  margin-top: 10px;
 }

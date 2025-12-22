@@ -15,6 +15,8 @@ from .UsuarioManager import UsuarioManager
 from .Notificacion import Notificacion
 from .PrediccionIA import PrediccionIA
 from .Rol import Rol
+from .ml_models import MLModel, TrainingSession
+
 __all__ = [
     'Configuracion', 
     'EstadoSensor',
@@ -32,4 +34,6 @@ __all__ = [
     'UsuarioManager',
     'Notificacion',
     'PrediccionIA',
+    'MLModel',
+    'TrainingSession',
 ]

@@ -16,6 +16,8 @@ from .log_sistema_viewset import LogSistemaViewSet
 from .notificacion_viewset import NotificacionViewSet
 from .seguimiento_estado_planta_viewset import SeguimientoEstadoPlantaViewSet
 from .auth_views import RegistroView
+from .profile_views import UserProfileView
+from .ai_views import AIStatusView, AIControlView
 __all__ = [
     'LoginView',
     'LogoutView',
@@ -35,4 +37,7 @@ __all__ = [
     'NotificacionViewSet',
     'SeguimientoEstadoPlantaViewSet',
     'RegistroView',
+    'UserProfileView',
+    'AIStatusView',
+    'AIControlView',
 ]
