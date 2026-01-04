@@ -1,0 +1,203 @@
+/* frontend/src/components/WateringControl.css */
+.watering-control {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  max-width: 600px;
+  margin: 20px auto;
+}
+
+.watering-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #eaeaea;
+  padding-bottom: 10px;
+}
+
+.mode-selector {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mode-selector select {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  background: white;
+}
+
+.prediction-card {
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 20px;
+  transition: all 0.3s ease;
+}
+
+.prediction-card.needs-water {
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+  border-left: 5px solid #2196f3;
+}
+
+.prediction-card.no-water {
+  background: linear-gradient(135deg, #f1f8e9 0%, #dcedc8 100%);
+  border-left: 5px solid #8bc34a;
+}
+
+.prediction-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.confidence {
+  background: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-weight: bold;
+  font-size: 0.9em;
+}
+
+.prediction-details p {
+  margin: 8px 0;
+  display: flex;
+  gap: 10px;
+}
+
+.prediction-details strong {
+  min-width: 140px;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+.btn-primary, .btn-secondary, .btn-refresh {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+
+.btn-primary {
+  background: #2196f3;
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #0d8bf2;
+}
+
+.btn-secondary {
+  background: #f5f5f5;
+  color: #333;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #e0e0e0;
+}
+
+.btn-refresh {
+  background: #ff9800;
+  color: white;
+}
+
+.btn-refresh:hover:not(:disabled) {
+  background: #f57c00;
+}
+
+.btn-primary:disabled, .btn-secondary:disabled, .btn-refresh:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.history-section {
+  margin-top: 30px;
+}
+
+.history-list {
+  max-height: 300px;
+  overflow-y: auto;
+  margin-top: 10px;
+}
+
+.history-item {
+  background: #f9f9f9;
+  padding: 12px 15px;
+  margin-bottom: 8px;
+  border-radius: 6px;
+  border-left: 3px solid #4caf50;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.history-item:nth-child(odd) {
+  background: #f5f5f5;
+}
+
+.history-date {
+  font-size: 0.9em;
+  color: #666;
+}
+
+.history-details {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+
+.status {
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 0.8em;
+  font-weight: bold;
+}
+
+.status.ejecutando {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.status.completado {
+  background: #d4edda;
+  color: #155724;
+}
+
+.status.programado {
+  background: #d1ecf1;
+  color: #0c5460;
+}
+
+.duration, .humidity {
+  font-size: 0.9em;
+  color: #555;
+}
+
+.no-history {
+  text-align: center;
+  color: #999;
+  font-style: italic;
+  padding: 20px;
+}
+
+.dev-note {
+  margin-top: 20px;
+  padding: 15px;
+  background: #fff8e1;
+  border-radius: 6px;
+  border-left: 4px solid #ffc107;
+}
+
+.dev-note small {
+  color: #856404;
+}

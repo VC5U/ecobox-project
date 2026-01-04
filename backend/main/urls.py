@@ -1,4 +1,4 @@
-# backend/main/urls.py - VERSIÓN SIMPLIFICADA
+# backend/main/urls.py - VERSIÓN CORREGIDA
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
@@ -14,7 +14,8 @@ from .views.auth_views import RegistroView, SolicitarResetPasswordView, ResetPas
 from .views.profile_views import UserProfileView
 from .views.ai_views import (
     AIStatusView, AIControlView, 
-    PredictionView, TrainingStatusView
+    PredictionView, TrainingStatusView,
+    WateringPredictionView, WateringActivationView, WateringHistoryView  # ✅ NUEVO: Añadidos aquí
 )
 from .views import alert_views
 from .views import riego_viewset
@@ -24,6 +25,7 @@ from .views.recommendation_views import RecommendationView
 from .views.historial_planta import historial_planta_real as historial_planta
 from .views.historial_planta import historial_mediciones_sensor
 from . import views
+
 router = DefaultRouter()
 router.register(r'roles', RolViewSet)
 router.register(r'usuarios', UsuarioViewSet)
@@ -62,6 +64,11 @@ urlpatterns = [
     path('ai/training-status/', TrainingStatusView.as_view(), name='training-status'),
     path('ai/metrics/', AIStatusView.as_view(), name='ai-metrics'),
     
+    # ✅ NUEVO: Riego automático por IA
+    path('ai/watering/predict/<int:plant_id>/', WateringPredictionView.as_view(), name='watering-predict'),
+    path('ai/watering/activate/<int:plant_id>/', WateringActivationView.as_view(), name='watering-activate'),
+    path('ai/watering/history/<int:plant_id>/', WateringHistoryView.as_view(), name='watering-history'),
+    
     # Alertas
     path('alerts/', alert_views.AlertListView.as_view(), name='alert_list'),
     path('alerts/stats/', alert_views.AlertStatsView.as_view(), name='alert_stats'),
@@ -77,12 +84,12 @@ urlpatterns = [
     path('riegos/stats/', riego_viewset.RiegoStatsView.as_view(), name='riego_stats'),
     path('riegos/quick/', riego_viewset.RiegoQuickActionView.as_view(), name='riego_quick'),
     path('riegos/schedule/', riego_viewset.RiegoScheduleView.as_view(), name='riego_schedule'),
-     # Historial
+    
+    # Historial
     path('plantas/<int:id_planta>/historial/', historial_planta, name='historial_planta'),
-  # NUEVO: Endpoint para historial REAL
     path('sensores/<int:sensor_id>/historial/', historial_mediciones_sensor, name='historial_sensor'),
-
-     # NOTA: HumidityHistoryView y RecommendationView 
+    
+    # HumidityHistoryView y RecommendationView 
     path('humidity-history/', HumidityHistoryView.as_view(), name='humidity_history'),
     path('recommendations/', RecommendationView.as_view(), name='recommendations'),
 ]
