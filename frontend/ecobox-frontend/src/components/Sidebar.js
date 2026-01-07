@@ -10,12 +10,12 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
   const navigate = useNavigate();
 
   const menuItems = [
-    { path: '/dashboard', label: 'Dashboard', icon: '📊' },
+    { path: '/dashboard', label: 'Dashboard', icon: '📊📈' },
     { path: '/plantas', label: 'Plantas', icon: '🌿' },
     { path: '/familia', label: 'Familia', icon: '👨‍👩‍👧‍👦' },
     { path: '/notificaciones', label: 'Notificaciones', icon: '🔔' },
-    { path: '/configuracion', label: 'Configuración', icon: '⚙️' },
-    { path: '/perfil', label: 'Perfil', icon: '⚙️' },
+   // { path: '/configuracion', label: 'Configuración', icon: '⚙️' },
+    { path: '/perfil', label: 'Perfil', icon: '😊' },
 
   ];
 

@@ -138,7 +138,7 @@ const fetchAvailablePlants = useCallback(async () => {
     });
     
     // Limitar a las 15 plantas más importantes para el dropdown
-    const importantPlants = sortedPlants.slice(0, 15);
+const importantPlants = processedPlants;
     
     console.log(`✅ ${importantPlants.length} plantas importantes (de ${processedPlants.length} totales):`);
     importantPlants.forEach((plant, i) => {
@@ -365,20 +365,19 @@ const fetchAvailablePlants = useCallback(async () => {
   }, [fetchAIStats, showNotification]);
 
   // Función fetchDashboardData - CORREGIDA CON AXIOS
-// Función fetchDashboardData - ACTUALIZADA PARA USAR DATOS REALES DEL BACKEND
 const fetchDashboardData = useCallback(async () => {
   try {
     console.log('🔄 Obteniendo datos del dashboard...');
     
-    // Obtener datos del dashboard
+    // USAR AXIOS EN LUGAR DE FETCH
     const response = await API.get('/dashboard/');
+    
     const data = response.data;
-    
     console.log('✅ Datos del dashboard obtenidos:', data);
-    console.log(`💧 Plantas sedientas desde backend: ${data.plantas_necesitan_agua}`);
     
-    // También obtener plantas del usuario para validación
+    // OBTENER EL NÚMERO REAL DE PLANTAS DEL USUARIO
     let totalPlantasReales = data.total_plantas || 0;
+    
     try {
       const plantasResponse = await API.get('/plantas/mis_plantas/');
       const plantasData = plantasResponse.data;
@@ -397,22 +396,22 @@ const fetchDashboardData = useCallback(async () => {
       console.log(`📊 Número real de plantas del usuario: ${totalPlantasReales}`);
       
     } catch (plantasError) {
-      console.warn('⚠️ No se pudo obtener el número real de plantas:', plantasError.message);
+      console.warn('⚠️ No se pudo obtener el número real de plantas, usando datos del dashboard:', plantasError.message);
     }
     
-    // USAR DIRECTAMENTE LOS DATOS DEL BACKEND (ya están calculados correctamente)
+    // Combinar datos, usando el número real de plantas
     setDashboardData({
       ...data,
-      total_plantas: totalPlantasReales,
-      // plantas_necesitan_agua ya viene calculado correctamente del backend
+      total_plantas: totalPlantasReales, 
+      total_plantas_original: data.total_plantas, // Guardar el original por si acaso
       plantas_necesitan_agua: data.plantas_necesitan_agua || 0,
       humedad_promedio: data.humedad_promedio || '65%',
       ultima_actualizacion: data.ultima_actualizacion || new Date().toLocaleString(),
       modo: data.modo || 'datos_reales',
       metricas_avanzadas: {
-        plantas_activas: totalPlantasReales,
+        plantas_activas: totalPlantasReales, // Usar el número real aquí también
         sensores_activos: data.metricas_avanzadas?.sensores_activos || 0,
-        recomendaciones_activas: data.plantas_necesitan_agua || 0, // Usar plantas sedientas
+        recomendaciones_activas: data.metricas_avanzadas?.recomendaciones_activas || 0,
         modelos_ia_activos: data.metricas_avanzadas?.modelos_ia_activos || 0,
       }
     });
@@ -420,18 +419,16 @@ const fetchDashboardData = useCallback(async () => {
   } catch (error) {
     console.log('⚠️ Error en fetchDashboardData:', error.message || error);
     
-    // Datos de respaldo - ahora con plantas sedientas
     setDashboardData({
-      total_plantas: 22,
-      plantas_necesitan_agua: 3, // Valor de ejemplo para cuando falle la conexión
-      plantas_criticas: 1,
+      total_plantas: 22, 
+      plantas_necesitan_agua: 0,
       humedad_promedio: '65%',
       ultima_actualizacion: new Date().toLocaleString(),
       modo: 'datos_reales',
       metricas_avanzadas: {
         plantas_activas: 22,
         sensores_activos: 7,
-        recomendaciones_activas: 3, // Coincide con plantas sedientas
+        recomendaciones_activas: 2,
         modelos_ia_activos: 3,
       }
     });
