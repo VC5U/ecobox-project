@@ -16,7 +16,7 @@ from .Notificacion import Notificacion
 from .PrediccionIA import PrediccionIA
 from .Rol import Rol
 from .ml_models import MLModel, TrainingSession
-
+from .AlertaPlanta import AlertaPlanta
 __all__ = [
     'Configuracion', 
     'EstadoSensor',
@@ -36,4 +36,5 @@ __all__ = [
     'PrediccionIA',
     'MLModel',
     'TrainingSession',
+    'AlertaPlanta',
 ]

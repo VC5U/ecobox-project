@@ -11,4 +11,4 @@ class Sensor(models.Model):
     activo = models.BooleanField(default=True)
     
     def __str__(self):
-        return f"{self.nombre} - {self.planta.nombre}"
+        return f"{self.nombre} - {self.planta.nombrePersonalizado}"

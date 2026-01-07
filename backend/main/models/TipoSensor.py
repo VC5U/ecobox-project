@@ -1,9 +1,5 @@
 # main/models.py
 from django.db import models
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
-from django.utils import timezone
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
-
 
 class TipoSensor(models.Model):
     nombre = models.CharField(max_length=50, unique=True)

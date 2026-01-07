@@ -1,4 +1,4 @@
-# backend/services/ai_service.py
+# backend/main/serializers/ai_service.py
 """
 Servicio principal de IA para EcoBox.
 Integra chatbot, recomendaciones y análisis predictivo.

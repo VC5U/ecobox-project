@@ -1,5 +1,6 @@
-// src/components/alerts/AlertsWidget.jsx - VERSIÓN ADAPTADA
+// src/components/alerts/AlertsWidget.jsx
 import React, { useState, useEffect, useCallback } from 'react';
+import API from '../../services/api'; // ¡IMPORTA AXIOS!
 import './AlertsWidget.css';
 
 const AlertsWidget = () => {
@@ -10,16 +11,22 @@ const AlertsWidget = () => {
 
   const fetchAlerts = useCallback(async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/alerts/?limit=10&no_resueltas=true', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include'
+      console.log('🔍 Iniciando fetchAlerts...');
+      
+      // ¡USAR AXIOS EN LUGAR DE FETCH!
+      const response = await API.get('/alerts/', {
+        params: {
+          limit: 10,
+          no_resueltas: true
+        }
       });
       
-      if (response.ok) {
-        const data = await response.json();
+      console.log('✅ Respuesta completa del servidor:', response);
+      
+      if (response.data && response.data.status === 'success') {
+        const data = response.data;
+        console.log('📦 Datos recibidos:', data);
+        
         setAlerts(data.alertas || []);
         setStats({
           total: data.total || 0,
@@ -27,7 +34,8 @@ const AlertsWidget = () => {
           critical: data.criticas_pendientes || 0
         });
       } else {
-        throw new Error('Error en la respuesta');
+        console.warn('⚠️ Respuesta inesperada:', response.data);
+        throw new Error('Formato de respuesta inesperado');
       }
     } catch (error) {
       console.log('⚠️ Error cargando alertas:', error);
@@ -88,16 +96,12 @@ const AlertsWidget = () => {
 
   const markAsRead = async (alertId) => {
     try {
-      const response = await fetch('http://localhost:8000/api/alerts/mark-read/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ alert_id: alertId }),
-        credentials: 'include'
+      // ¡USAR AXIOS!
+      const response = await API.post('/alerts/mark-read/', {
+        alert_id: alertId
       });
       
-      if (response.ok) {
+      if (response.data && response.data.status === 'success') {
         // Actualizar localmente
         setAlerts(alerts.map(alert => 
           alert.id === alertId ? { ...alert, leida: true } : alert
@@ -118,16 +122,12 @@ const AlertsWidget = () => {
 
   const markAsResolved = async (alertId) => {
     try {
-      const response = await fetch('http://localhost:8000/api/alerts/mark-resolved/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ alert_id: alertId }),
-        credentials: 'include'
+      // ¡USAR AXIOS!
+      const response = await API.post('/alerts/mark-resolved/', {
+        alert_id: alertId
       });
       
-      if (response.ok) {
+      if (response.data && response.data.status === 'success') {
         // Remover de la lista
         setAlerts(alerts.filter(alert => alert.id !== alertId));
         
@@ -148,16 +148,11 @@ const AlertsWidget = () => {
 
   const createTestAlert = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/alerts/test/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include'
-      });
+      // ¡USAR AXIOS!
+      const response = await API.post('/alerts/test/');
       
-      if (response.ok) {
-        const data = await response.json();
+      if (response.data && response.data.status === 'success') {
+        const data = response.data;
         // Agregar la nueva alerta al principio
         setAlerts([data.alerta, ...alerts]);
         

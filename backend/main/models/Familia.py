@@ -1,8 +1,6 @@
 # main/models.py
 from django.db import models
-from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.utils import timezone
-from .UsuarioManager import UsuarioManager
 
 class Familia(models.Model):
     nombre = models.CharField(max_length=100)

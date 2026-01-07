@@ -21,7 +21,7 @@ const Plantas = () => {
         <Route path="nueva" element={<PlantasFormulario />} />
         <Route path=":id" element={<PlantasDetalle />} />
         <Route path=":id/editar" element={<PlantEdit />} />
-<Route path=":id/seguimiento" element={<PlantasSeguimiento />} /> 
+        <Route path=":id/seguimiento" element={<PlantasSeguimiento />} /> 
         <Route path=":id/seguimiento/nuevo" element={<PlantasNuevoSeguimiento />} /> 
               </Routes>
     </div>

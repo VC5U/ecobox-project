@@ -1,5 +1,4 @@
 # backend/main/models/riego.py - VERSIÓN CORREGIDA
-# backend/main/models/riego.py - VERSIÓN SIMPLIFICADA
 from django.db import models
 from django.utils import timezone
 

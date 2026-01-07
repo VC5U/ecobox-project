@@ -13,7 +13,6 @@ from django.db.models import Avg, Count, Q
 from main.models import MLModel, Planta, Sensor, Medicion, Riego, PrediccionIA, AlertaPlanta
 
 @method_decorator(csrf_exempt, name='dispatch')
-@method_decorator(csrf_exempt, name='dispatch')
 class AIStatusView(APIView):
     def get(self, request):
         try:
