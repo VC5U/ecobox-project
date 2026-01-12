@@ -11,7 +11,7 @@ import Plantas from './pages/Plantas';
 import Perfil from './pages/Perfil';
 import Configuracion2 from './pages/Configuracion';
 import Configuracion from './components/AIControlPanel';
-
+import AlertsPage from './components/alerts/AlertsPage'; 
 import Familia from './components/familia/Familia';
 import Notificaciones from './components/Notificaciones/Notificaciones';
 import Layout from './components/Layout';
@@ -77,6 +77,7 @@ function App() {
               
               {/* Dashboard principal */}
               <Route path="/dashboard" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
+              <Route path="/alerts" element={<AlertsPage />} />
 
               {/* Perfil de usuario */}
               <Route path="/perfil" element={<ProtectedRoute><Layout><Perfil /></Layout></ProtectedRoute>} />

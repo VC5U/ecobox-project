@@ -46,6 +46,19 @@ const Seguimiento = ({ plantaId, onBack, onAddSeguimiento }) => {
         (a, b) => new Date(b.fecha_registro) - new Date(a.fecha_registro)
       );
       
+      // DEBUG: Verificar el orden después de ordenar
+      console.log('📊 Orden de seguimientos después de sort:');
+      seguimientosOrdenados.forEach((seg, i) => {
+        console.log(`${i+1}. ID: ${seg.id}, Fecha: ${seg.fecha_registro}, Estado: ${seg.estado}`);
+      });
+      
+      // También verificar las fechas como objetos Date
+      console.log('📅 Fechas parseadas como objetos Date:');
+      seguimientosOrdenados.forEach((seg, i) => {
+        const fechaDate = new Date(seg.fecha_registro);
+        console.log(`${i+1}. ID ${seg.id}: ${fechaDate.toISOString()} (${fechaDate.getTime()})`);
+      });
+      
       setSeguimientos(seguimientosOrdenados);
       
       // Si no hay seguimientos, mostrar mensaje
@@ -78,16 +91,38 @@ const Seguimiento = ({ plantaId, onBack, onAddSeguimiento }) => {
     }
   };
 
-  const formatDate = (dateString) => {
-    const options = { 
-      day: 'numeric', 
-      month: 'long', 
-      year: 'numeric', 
-      hour: '2-digit', 
-      minute: '2-digit' 
-    };
-    return new Date(dateString).toLocaleDateString('es-ES', options);
-  };
+ const formatDate = (dateString) => {
+  try {
+    // Convertir formato MySQL a ISO
+    let isoDate = dateString;
+    if (dateString && dateString.includes(' ') && !dateString.includes('T')) {
+      isoDate = dateString.replace(' ', 'T');
+    }
+    
+    const date = new Date(isoDate);
+    
+    // Validar
+    if (isNaN(date.getTime())) {
+      console.warn('Fecha inválida:', dateString);
+      return dateString.split(' ')[0]; // Retorna solo YYYY-MM-DD
+    }
+    
+    // Formatear en español, mostrando hora exacta de BD
+    return new Intl.DateTimeFormat('es-ES', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+      timeZone: 'UTC'
+    }).format(date);
+    
+  } catch (error) {
+    console.error('Error formateando fecha:', error);
+    return dateString || 'Fecha inválida';
+  }
+};
 
   const openImageModal = (imageUrl) => {
     setSelectedImage(imageUrl);

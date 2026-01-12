@@ -1,228 +1,521 @@
 // src/pages/Perfil.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { profileService } from '../services/profileService';
 import './Profile.css';
 
-// Opcional: instalar react-icons si quieres iconos más profesionales
-// npm install react-icons
-// import { FaUser, FaEnvelope, FaCalendarAlt, FaEdit, FaSave, FaTimes, FaLock, FaKey, FaPaintBrush, FaPalette, FaMagic, FaShieldAlt, FaSignOutAlt, FaArrowLeft, FaChartBar, FaLeaf, FaTint, FaSeedling } from 'react-icons/fa';
+// Constantes dentro del mismo archivo
+const AVATAR_COLORS = [
+  '#10B981', '#3B82F6', '#8B5CF6', '#F59E0B', 
+  '#EF4444', '#EC4899', '#14B8A6', '#F97316',
+  '#06B6D4', '#8B5CF6', '#84CC16', '#F43F5E'
+];
+
+const BIOS_PREDEFINIDAS = [
+  "🌿 Entusiasta de la jardinería y monitoreo de plantas",
+  "💧 Amante del cuidado responsable de plantas",
+  "📊 Apasionado por el seguimiento de métricas de plantas",
+  "🌱 Comprometido con la jardinería sostenible",
+  "✨ Explorando el mundo de la botánica digital",
+  "🌸 Jardinería urbana como estilo de vida",
+  "💚 Cultivando un futuro más verde",
+  "🌳 Conectando con la naturaleza a través de la tecnología"
+];
+
+// Función para generar avatar CON color específico
+const generateAvatarUrl = (nombre, apellido, username, userId, colorIndex = null) => {
+  const iniciales = `${nombre?.[0] || ''}${apellido?.[0] || ''}`.toUpperCase() || username?.[0]?.toUpperCase() || 'U';
+  
+  // Si se proporciona un colorIndex, usarlo; de lo contrario, obtener del localStorage
+  let indexToUse;
+  
+  if (colorIndex !== null && colorIndex !== undefined) {
+    indexToUse = colorIndex % AVATAR_COLORS.length;
+  } else {
+    // Intentar obtener color guardado
+    const storedColor = localStorage.getItem(`avatar_color_${userId}`);
+    if (storedColor !== null) {
+      indexToUse = parseInt(storedColor) % AVATAR_COLORS.length;
+    } else {
+      // Generar índice basado en ID de usuario
+      const seed = userId ? userId.toString().split('').reduce((a, b) => a + parseInt(b), 0) : 0;
+      indexToUse = seed % AVATAR_COLORS.length;
+      localStorage.setItem(`avatar_color_${userId}`, indexToUse.toString());
+    }
+  }
+  
+  const color = AVATAR_COLORS[indexToUse];
+  return {
+    url: `https://ui-avatars.com/api/?name=${encodeURIComponent(iniciales)}&background=${color.replace('#', '')}&color=fff&bold=true&size=200`,
+    colorIndex: indexToUse,
+    color: color
+  };
+};
+
+// Función para obtener bio con persistencia
+const getRandomBio = (userId) => {
+  // Intentar obtener bio guardada
+  const storedBio = localStorage.getItem(`user_bio_${userId}`);
+  if (storedBio) return storedBio;
+  
+  // Si no hay bio guardada, generar una basada en el ID
+  const seed = userId ? userId.toString().split('').reduce((a, b) => a + parseInt(b), 0) : Date.now();
+  const bioIndex = seed % BIOS_PREDEFINIDAS.length;
+  const selectedBio = BIOS_PREDEFINIDAS[bioIndex];
+  
+  // Guardar la bio seleccionada
+  localStorage.setItem(`user_bio_${userId}`, selectedBio);
+  localStorage.setItem(`user_bio_index_${userId}`, bioIndex.toString());
+  
+  return selectedBio;
+};
 
 const Perfil = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, updateUser } = useAuth();
   const navigate = useNavigate();
   
-  const [formData, setFormData] = useState({
-    nombre: '',
-    apellido: '',
-    email: '',
-    username: '',
-    telefono: '',
-    fecha_registro: '',
+  // Estados reorganizados y optimizados
+  const [profileState, setProfileState] = useState({
+    personalInfo: {
+      nombre: '',
+      apellido: '',
+      email: '',
+      username: '',
+      telefono: '',
+      fecha_registro: '',
+    },
+    stats: {
+      plantas_count: 0,
+      mediciones_count: 0,
+      riegos_hoy: 0,
+      semanas_activo: 1
+    },
+    customization: {
+      bio: '',
+      avatar: '',
+      avatarColorIndex: 0,
+      avatarColor: '#10B981'
+    }
   });
   
-  const [generatedBio, setGeneratedBio] = useState('');
-  const [generatedAvatar, setGeneratedAvatar] = useState('');
+  const [uiState, setUiState] = useState({
+    loading: true,
+    saving: false,
+    editing: false,
+    showPasswordForm: false,
+    hasUnsavedChanges: false
+  });
   
-  const [editing, setEditing] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
-  const [stats, setStats] = useState(null);
+  const [notifications, setNotifications] = useState({
+    message: '',
+    error: ''
+  });
   
-  // Estados para cambio de contraseña
-  const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [passwordData, setPasswordData] = useState({
     oldPassword: '',
     newPassword: '',
     confirmPassword: ''
   });
-  const [changingPassword, setChangingPassword] = useState(false);
 
-  useEffect(() => {
-    if (user) {
-      fetchUserProfile();
-    } else {
-      navigate('/login');
+  // Memoizar estadísticas
+  const memoizedStats = useMemo(() => [
+    { 
+      key: 'plantas', 
+      value: profileState.stats.plantas_count, 
+      label: 'Plantas', 
+      className: 'pf-stat-plants' 
+    },
+    { 
+      key: 'mediciones', 
+      value: profileState.stats.mediciones_count, 
+      label: 'Mediciones', 
+      className: 'pf-stat-measures' 
+    },
+    { 
+      key: 'riegos', 
+      value: profileState.stats.riegos_hoy, 
+      label: 'Riegos hoy', 
+      className: 'pf-stat-watering' 
+    },
+    { 
+      key: 'semanas', 
+      value: profileState.stats.semanas_activo, 
+      label: 'Semanas activo', 
+      className: 'pf-stat-weeks' 
     }
-  }, [user, navigate]);
+  ], [profileState.stats]);
 
-  const fetchUserProfile = async () => {
+  // Cargar perfil con manejo de errores mejorado
+  const fetchUserProfile = useCallback(async () => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    
     try {
-      setLoading(true);
-      setError('');
+      setUiState(prev => ({ ...prev, loading: true }));
+      setNotifications({ message: '', error: '' });
       
       const result = await profileService.getProfile();
       
       if (result.success) {
         const data = result.data;
         
-        setFormData({
+        const newPersonalInfo = {
           nombre: data.nombre || data.first_name || '',
           apellido: data.apellido || data.last_name || '',
           email: data.email || '',
           username: data.username || '',
           telefono: data.telefono || '',
           fecha_registro: data.fecha_registro_formatted || 
-                         (data.date_joined ? new Date(data.date_joined).toLocaleDateString() : ''),
-        });
+                        (data.date_joined ? new Date(data.date_joined).toLocaleDateString() : ''),
+        };
         
-        // Generar avatar y bio usando el servicio
-        const avatar = profileService.getAvatarUrl(
-          data.nombre || data.first_name,
-          data.apellido || data.last_name,
-          data.username,
+        // Obtener avatar con color actual
+        const avatarData = generateAvatarUrl(
+          newPersonalInfo.nombre,
+          newPersonalInfo.apellido,
+          newPersonalInfo.username,
           data.id
         );
-        const bio = profileService.getRandomBio(data.id);
         
-        setGeneratedAvatar(avatar);
-        setGeneratedBio(bio);
+        // Obtener bio
+        const userBio = getRandomBio(data.id);
         
-        // Guardar estadísticas
-        if (data.estadisticas) {
-          setStats(data.estadisticas);
+        setProfileState({
+          personalInfo: newPersonalInfo,
+          stats: data.estadisticas || profileState.stats,
+          customization: {
+            bio: userBio,
+            avatar: avatarData.url,
+            avatarColorIndex: avatarData.colorIndex,
+            avatarColor: avatarData.color
+          }
+        });
+        
+        // Actualizar contexto de autenticación
+        if (updateUser) {
+          updateUser({ ...data, ...newPersonalInfo });
         }
         
-        // Actualizar user en localStorage si es necesario
-        if (data && !localStorage.getItem('user')) {
-          localStorage.setItem('user', JSON.stringify(data));
-        }
       } else {
-        setError(result.error || 'Error al cargar el perfil');
+        setNotifications(prev => ({ 
+          ...prev, 
+          error: result.error || 'Error al cargar el perfil' 
+        }));
       }
       
     } catch (error) {
       console.error('❌ Error en la petición:', error);
-      setError('Error de conexión con el servidor');
+      setNotifications(prev => ({ 
+        ...prev, 
+        error: 'Error de conexión con el servidor' 
+      }));
     } finally {
-      setLoading(false);
+      setUiState(prev => ({ ...prev, loading: false }));
     }
-  };
+  }, [user, navigate, updateUser]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
+  useEffect(() => {
+    fetchUserProfile();
+  }, [fetchUserProfile]);
+
+  // Manejador de cambios optimizado con debounce
+  const handleChange = useCallback((field, value) => {
+    setProfileState(prev => ({
       ...prev,
-      [name]: value
+      personalInfo: {
+        ...prev.personalInfo,
+        [field]: value
+      }
     }));
     
-    // Regenerar avatar si cambia nombre o apellido
-    if (name === 'nombre' || name === 'apellido') {
-      const nuevoAvatar = profileService.getAvatarUrl(
-        name === 'nombre' ? value : formData.nombre,
-        name === 'apellido' ? value : formData.apellido,
-        formData.username,
-        user?.id
-      );
-      setGeneratedAvatar(nuevoAvatar);
+    // Marcar que hay cambios sin guardar
+    if (!uiState.hasUnsavedChanges && uiState.editing) {
+      setUiState(prev => ({ ...prev, hasUnsavedChanges: true }));
     }
-  };
+    
+    // Actualizar avatar si cambia nombre o apellido
+    if ((field === 'nombre' || field === 'apellido') && user?.id) {
+      const avatarData = generateAvatarUrl(
+        field === 'nombre' ? value : profileState.personalInfo.nombre,
+        field === 'apellido' ? value : profileState.personalInfo.apellido,
+        profileState.personalInfo.username,
+        user.id,
+        profileState.customization.avatarColorIndex
+      );
+      
+      setProfileState(prev => ({
+        ...prev,
+        customization: {
+          ...prev.customization,
+          avatar: avatarData.url,
+          avatarColorIndex: avatarData.colorIndex,
+          avatarColor: avatarData.color
+        }
+      }));
+    }
+  }, [user?.id, uiState.editing, uiState.hasUnsavedChanges, profileState.personalInfo, profileState.customization.avatarColorIndex]);
 
+  // FUNCIÓN CORREGIDA: Cambiar color del avatar
+  const cambiarAvatar = useCallback(() => {
+    if (!user?.id) {
+      setNotifications({ 
+        error: 'Usuario no identificado', 
+        message: '' 
+      });
+      return;
+    }
+    
+    try {
+      // Obtener el siguiente color en la lista
+      const currentIndex = profileState.customization.avatarColorIndex;
+      const nextIndex = (currentIndex + 1) % AVATAR_COLORS.length;
+      const nextColor = AVATAR_COLORS[nextIndex];
+      
+      console.log('🔍 Cambiando avatar:', {
+        currentIndex,
+        nextIndex,
+        nextColor,
+        nombre: profileState.personalInfo.nombre,
+        apellido: profileState.personalInfo.apellido
+      });
+      
+      // Generar nueva URL del avatar con el nuevo color
+      const iniciales = `${profileState.personalInfo.nombre?.[0] || ''}${profileState.personalInfo.apellido?.[0] || ''}`.toUpperCase() || 
+                       profileState.personalInfo.username?.[0]?.toUpperCase() || 'U';
+      
+      const newAvatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(iniciales)}&background=${nextColor.replace('#', '')}&color=fff&bold=true&size=200`;
+      
+      console.log('🖼️ Nueva URL del avatar:', newAvatarUrl);
+      
+      // Guardar el nuevo color en localStorage
+      localStorage.setItem(`avatar_color_${user.id}`, nextIndex.toString());
+      
+      // Actualizar estado
+      setProfileState(prev => ({
+        ...prev,
+        customization: {
+          ...prev.customization,
+          avatar: newAvatarUrl,
+          avatarColorIndex: nextIndex,
+          avatarColor: nextColor
+        }
+      }));
+      
+      setNotifications({ 
+        message: `🎨 ¡Color cambiado a ${nextColor}!`, 
+        error: '' 
+      });
+      
+      setTimeout(() => {
+        setNotifications(prev => ({ ...prev, message: '' }));
+      }, 3000);
+      
+    } catch (error) {
+      console.error('❌ Error al cambiar avatar:', error);
+      setNotifications({ 
+        error: 'Error al cambiar el avatar', 
+        message: '' 
+      });
+    }
+  }, [user?.id, profileState.personalInfo, profileState.customization.avatarColorIndex]);
+
+  // FUNCIÓN CORREGIDA: Cambiar biografía
+  const cambiarBio = useCallback(() => {
+    if (!user?.id) {
+      setNotifications({ 
+        error: 'Usuario no identificado', 
+        message: '' 
+      });
+      return;
+    }
+    
+    try {
+      // Obtener índice actual de bio
+      const currentBioIndex = parseInt(localStorage.getItem(`user_bio_index_${user.id}`) || '0');
+      const nextBioIndex = (currentBioIndex + 1) % BIOS_PREDEFINIDAS.length;
+      const nuevaBio = BIOS_PREDEFINIDAS[nextBioIndex];
+      
+      console.log('📝 Cambiando bio:', {
+        currentBioIndex,
+        nextBioIndex,
+        nuevaBio
+      });
+      
+      // Guardar nueva bio en localStorage
+      localStorage.setItem(`user_bio_${user.id}`, nuevaBio);
+      localStorage.setItem(`user_bio_index_${user.id}`, nextBioIndex.toString());
+      
+      // Actualizar estado
+      setProfileState(prev => ({
+        ...prev,
+        customization: {
+          ...prev.customization,
+          bio: nuevaBio
+        }
+      }));
+      
+      setNotifications({ 
+        message: '✨ ¡Biografía actualizada!', 
+        error: '' 
+      });
+      
+      setTimeout(() => {
+        setNotifications(prev => ({ ...prev, message: '' }));
+      }, 3000);
+      
+    } catch (error) {
+      console.error('❌ Error al cambiar bio:', error);
+      setNotifications({ 
+        error: 'Error al cambiar la biografía', 
+        message: '' 
+      });
+    }
+  }, [user?.id]);
+
+  // Resto del código sigue igual hasta el render...
+  // Guardar perfil con validación
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setSaving(true);
-    setError('');
-    setMessage('');
-
+    
+    setUiState(prev => ({ ...prev, saving: true, hasUnsavedChanges: false }));
+    setNotifications({ message: '', error: '' });
+    
     try {
-      const result = await profileService.updateProfile(formData);
+      const result = await profileService.updateProfile(profileState.personalInfo);
       
       if (result.success) {
-        setMessage('✅ Perfil actualizado correctamente');
-        setEditing(false);
+        setNotifications({ 
+          message: '✅ Perfil actualizado correctamente', 
+          error: '' 
+        });
         
-        // Recargar datos del perfil
+        setUiState(prev => ({ 
+          ...prev, 
+          editing: false, 
+          saving: false 
+        }));
+        
+        // Actualizar datos locales
+        if (result.data) {
+          setProfileState(prev => ({
+            ...prev,
+            personalInfo: {
+              ...prev.personalInfo,
+              ...result.data
+            }
+          }));
+        }
+        
+        // Limpiar mensaje después de 3 segundos
         setTimeout(() => {
-          fetchUserProfile();
-          setMessage('');
-        }, 2000);
+          setNotifications(prev => ({ ...prev, message: '' }));
+        }, 3000);
+        
       } else {
-        setError(result.error || 'Error al actualizar el perfil');
+        setNotifications({ 
+          error: result.error || 'Error al actualizar el perfil', 
+          message: '' 
+        });
       }
     } catch (error) {
-      setError('Error de conexión con el servidor');
+      setNotifications({ 
+        error: 'Error de conexión con el servidor', 
+        message: '' 
+      });
     } finally {
-      setSaving(false);
+      setUiState(prev => ({ ...prev, saving: false }));
     }
   };
 
-  // Manejar cambio de contraseña
+  // Cambiar contraseña
   const handlePasswordChange = async (e) => {
     e.preventDefault();
-    setChangingPassword(true);
-    setError('');
-    setMessage('');
-
+    
+    setUiState(prev => ({ ...prev, saving: true }));
+    setNotifications({ message: '', error: '' });
+    
     try {
       const result = await profileService.changePassword(passwordData);
       
       if (result.success) {
-        setMessage('✅ Contraseña actualizada exitosamente');
+        setNotifications({ 
+          message: '✅ Contraseña actualizada exitosamente', 
+          error: '' 
+        });
         
-        // Limpiar formulario
         setPasswordData({
           oldPassword: '',
           newPassword: '',
           confirmPassword: ''
         });
         
-        // Ocultar formulario después de 2 segundos
         setTimeout(() => {
-          setShowPasswordForm(false);
-          setMessage('');
+          setUiState(prev => ({ ...prev, showPasswordForm: false }));
+          setNotifications(prev => ({ ...prev, message: '' }));
         }, 2000);
       } else {
-        setError(result.error || 'Error al cambiar la contraseña');
+        setNotifications({ 
+          error: result.error || 'Error al cambiar la contraseña', 
+          message: '' 
+        });
       }
     } catch (error) {
-      setError('Error de conexión con el servidor');
+      setNotifications({ 
+        error: 'Error de conexión con el servidor', 
+        message: '' 
+      });
     } finally {
-      setChangingPassword(false);
+      setUiState(prev => ({ ...prev, saving: false }));
     }
   };
 
+  // Cerrar sesión con confirmación
   const handleLogout = () => {
-    logout();
-    navigate('/login');
+    if (window.confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+      logout();
+      navigate('/login');
+    }
   };
 
-  const cambiarAvatar = () => {
-    // Generar nuevo avatar con color diferente
-    const nuevoAvatar = profileService.getAvatarUrl(
-      formData.nombre,
-      formData.apellido,
-      formData.username,
-      user?.id
-    );
-    setGeneratedAvatar(nuevoAvatar);
-    
-    setMessage('🎨 ¡Avatar actualizado!');
-    setTimeout(() => setMessage(''), 2000);
-  };
-
-  const cambiarBio = () => {
-    const nuevaBio = profileService.getRandomBio(user?.id);
-    setGeneratedBio(nuevaBio);
-    
-    setMessage('✨ ¡Bio actualizada!');
-    setTimeout(() => setMessage(''), 2000);
-  };
-
+  // Cancelar edición con confirmación si hay cambios
   const handleCancel = () => {
-    setEditing(false);
-    fetchUserProfile();
-    setMessage('');
-    setError('');
+    if (uiState.hasUnsavedChanges && 
+        !window.confirm('Tienes cambios sin guardar. ¿Seguro que quieres cancelar?')) {
+      return;
+    }
+    
+    setUiState(prev => ({ 
+      ...prev, 
+      editing: false, 
+      hasUnsavedChanges: false 
+    }));
+    setNotifications({ message: '', error: '' });
+    fetchUserProfile(); // Recargar datos originales
   };
 
-  if (loading) {
+  // Toggle edición
+  const toggleEdit = () => {
+    if (uiState.editing && uiState.hasUnsavedChanges) {
+      if (!window.confirm('Tienes cambios sin guardar. ¿Seguro que quieres salir del modo edición?')) {
+        return;
+      }
+    }
+    setUiState(prev => ({ 
+      ...prev, 
+      editing: !prev.editing,
+      hasUnsavedChanges: false 
+    }));
+  };
+
+  // Loading state simplificado
+  if (uiState.loading) {
     return (
-      <div className="profile-container">
-        <div className="profile-loading">
-          <div className="spinner"></div>
+      <div className="pf-profile-container">
+        <div className="pf-profile-loading">
+          <div className="pf-spinner-large"></div>
           <p>Cargando perfil...</p>
         </div>
       </div>
@@ -230,321 +523,444 @@ const Perfil = () => {
   }
 
   return (
-    <div className="profile-container">
-      {/* Encabezado */}
-      <div className="profile-header">
-        <h1>
-          <span className="icon">👤</span> Mi Perfil
-        </h1>
-        <p>Gestiona tu información personal y preferencias</p>
-      </div>
-
-      {/* Contenido Principal - Grid de 2 columnas */}
-      <div className="profile-content">
-        {/* === COLUMNA IZQUIERDA: Sidebar === */}
-        <aside className="profile-sidebar">
-          {/* Avatar y Nombre */}
-          <div className="avatar-section">
-            <div className="avatar-container">
-              <img 
-                src={generatedAvatar} 
-                alt={`${formData.nombre} ${formData.apellido}`}
-                className="profile-avatar"
-              />
-            </div>
-            <h2>{formData.nombre} {formData.apellido}</h2>
-            <p className="username">@{formData.username}</p>
-            
+    <div className="pf-profile-container">
+      {/* Header */}
+      <header className="pf-profile-header">
+        <div className="pf-header-top">
+          <h1 className="pf-page-title">
+            <span className="pf-title-icon">👤</span>
+            Mi Perfil
+          </h1>
+          <div className="pf-header-actions">
             <button 
-              className="avatar-change-btn"
-              onClick={cambiarAvatar}
-              title="Cambiar color de avatar"
-            >
-              <span className="icon">🎨</span> Cambiar color
-            </button>
-          </div>
-
-          {/* Bio */}
-          <div className="bio-section">
-            <p className="bio-text">{generatedBio}</p>
-            <button 
-              className="bio-change-btn"
-              onClick={cambiarBio}
-            >
-              <span className="icon">🔄</span> Nueva bio
-            </button>
-            <p className="member-since">
-              <span className="icon">📅</span> 
-              Miembro desde: {formData.fecha_registro}
-            </p>
-          </div>
-
-          {/* Estadísticas */}
-          {stats && (
-            <div className="account-stats">
-              <h3>
-                <span className="icon">📊</span> Estadísticas
-              </h3>
-              <div className="stat-item">
-                <span className="stat-label">Plantas registradas</span>
-                <span className="stat-value">{stats.plantas_count || 0}</span>
-              </div>
-              <div className="stat-item">
-                <span className="stat-label">Mediciones</span>
-                <span className="stat-value">{stats.mediciones_count || 0}</span>
-              </div>
-              <div className="stat-item">
-                <span className="stat-label">Riegos hoy</span>
-                <span className="stat-value">{stats.riegos_hoy || 0}</span>
-              </div>
-              <div className="stat-item">
-                <span className="stat-label">Semanas activo</span>
-                <span className="stat-value">{stats.semanas_activo || 1}</span>
-              </div>
-            </div>
-          )}
-
-          {/* Acciones */}
-          <div className="sidebar-actions">
-            <button 
-              className="btn-secondary"
               onClick={() => navigate('/dashboard')}
+              className="pf-btn-secondary"
             >
-              <span className="icon">←</span> Volver al Dashboard
+              <span className="pf-back-arrow">←</span>
+              Volver al Dashboard
+            </button>
+          </div>
+        </div>
+        
+        <div className="pf-header-main">
+          <p className="pf-header-subtitle">Gestiona tu información personal y preferencias</p>
+          
+          {/* Estadísticas memoizadas */}
+          <div className="pf-stats-summary">
+            {memoizedStats.map(stat => (
+              <div key={stat.key} className={`pf-stat-card ${stat.className}`}>
+                <span className="pf-stat-number">{stat.value}</span>
+                <span className="pf-stat-label">{stat.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </header>
+
+      {/* Notificaciones */}
+      {notifications.message && (
+        <div className="pf-success-message">
+          <span className="pf-message-icon">✅</span>
+          {notifications.message}
+        </div>
+      )}
+      
+      {notifications.error && (
+        <div className="pf-error-message">
+          <span className="pf-message-icon">⚠️</span>
+          {notifications.error}
+        </div>
+      )}
+
+      <main className="pf-profile-content">
+        {/* Sidebar */}
+        <aside className="pf-profile-sidebar">
+          <div className="pf-avatar-section">
+            <div className="pf-avatar-container">
+              <img 
+                src={profileState.customization.avatar} 
+                alt={`${profileState.personalInfo.nombre} ${profileState.personalInfo.apellido}`}
+                className="pf-profile-avatar"
+                onError={(e) => {
+                  console.error('❌ Error cargando avatar:', e);
+                  // Fallback a un avatar por defecto
+                  e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(profileState.personalInfo.nombre?.[0] || 'U')}&background=10B981&color=fff&bold=true`;
+                }}
+              />
+              <button 
+                onClick={cambiarAvatar}
+                className="pf-avatar-change-btn"
+                title="Cambiar color de avatar"
+                disabled={uiState.saving}
+              >
+                🎨
+              </button>
+            </div>
+            
+            <div className="pf-user-info">
+              <h2 className="pf-user-name">
+                {profileState.personalInfo.nombre} {profileState.personalInfo.apellido}
+              </h2>
+              <p className="pf-username">@{profileState.personalInfo.username}</p>
+              
+              <div className="pf-member-info">
+                <span className="pf-member-icon">📅</span>
+                <span className="pf-member-text">
+                  Miembro desde: {profileState.personalInfo.fecha_registro}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="pf-bio-section">
+            <div className="pf-bio-header">
+              <h3 className="pf-bio-title">Bio Personal</h3>
+              <button 
+                onClick={cambiarBio}
+                className="pf-bio-change-btn"
+                title="Cambiar biografía"
+                disabled={uiState.saving}
+              >
+                🔄
+              </button>
+            </div>
+            <p className="pf-bio-text">{profileState.customization.bio}</p>
+          </div>
+
+          <div className="pf-sidebar-actions">
+            {uiState.hasUnsavedChanges && uiState.editing && (
+              <div className="pf-unsaved-changes">
+                <span className="pf-unsaved-icon">💾</span>
+                <span className="pf-unsaved-text">Tienes cambios sin guardar</span>
+              </div>
+            )}
+            
+            <button 
+              onClick={toggleEdit}
+              className={`pf-btn-edit-sidebar ${uiState.editing ? 'pf-editing-active' : ''}`}
+              disabled={uiState.saving}
+            >
+              <span className="pf-icon">✏️</span>
+              {uiState.editing ? 'Modo Edición' : 'Editar Perfil'}
+            </button>
+            
+            {uiState.editing && (
+              <div className="pf-edit-actions-sidebar">
+                <button 
+                  onClick={handleCancel}
+                  className="pf-btn-cancel-sidebar"
+                  disabled={uiState.saving}
+                >
+                  <span className="pf-icon">❌</span>
+                  Cancelar
+                </button>
+                <button 
+                  type="submit" 
+                  form="pf-profile-form"
+                  className="pf-btn-save-sidebar"
+                  disabled={uiState.saving || !uiState.hasUnsavedChanges}
+                >
+                  <span className="pf-icon">💾</span>
+                  {uiState.saving ? 'Guardando...' : 'Guardar'}
+                </button>
+              </div>
+            )}
+            
+            <button 
+              onClick={() => setUiState(prev => ({ 
+                ...prev, 
+                showPasswordForm: !prev.showPasswordForm 
+              }))}
+              className={`pf-btn-change-password ${uiState.showPasswordForm ? 'pf-active' : ''}`}
+              disabled={uiState.editing || uiState.saving}
+            >
+              <span className="pf-icon">🔐</span>
+              {uiState.showPasswordForm ? 'Ocultar Contraseña' : 'Cambiar Contraseña'}
             </button>
             
             <button 
-              className="btn-change-password"
-              onClick={() => setShowPasswordForm(!showPasswordForm)}
-            >
-              <span className="icon">🔐</span> Cambiar Contraseña
-            </button>
-            
-            <button 
-              className="btn-logout"
               onClick={handleLogout}
+              className="pf-btn-logout"
+              disabled={uiState.saving}
             >
-              <span className="icon">🚪</span> Cerrar Sesión
+              <span className="pf-icon">🚪</span>
+              Cerrar Sesión
             </button>
           </div>
         </aside>
 
-        {/* === COLUMNA DERECHA: Formulario Principal === */}
-        <main className="profile-form-section">
-          {/* Encabezado del Formulario */}
-          <div className="form-header">
-            <h2>
-              <span className="icon">👤</span> Información Personal
-            </h2>
-            <div className="edit-actions">
-              {!editing ? (
-                <button 
-                  className="btn-edit"
-                  onClick={() => setEditing(true)}
-                >
-                  <span className="icon">✏️</span> Editar Perfil
-                </button>
-              ) : (
-                <>
-                  <button 
-                    className="btn-cancel"
-                    onClick={handleCancel}
-                  >
-                    <span className="icon">❌</span> Cancelar
-                  </button>
+        {/* Main Content */}
+        <div className="pf-profile-main">
+          {/* Personal Info Form */}
+          <div className="pf-form-section">
+            <div className="pf-form-header">
+              <h2 className="pf-form-title">
+                <span className="pf-form-icon">👤</span>
+                Información Personal
+              </h2>
+            </div>
+
+            <form id="pf-profile-form" onSubmit={handleSubmit} className="pf-profile-form">
+              <div className="pf-form-grid">
+                <div className="pf-form-group">
+                  <label className="pf-form-label" htmlFor="pf-nombre">
+                    <span className="pf-label-icon">👤</span>
+                    Nombre *
+                  </label>
+                  <input
+                    type="text"
+                    id="pf-nombre"
+                    name="nombre"
+                    value={profileState.personalInfo.nombre}
+                    onChange={(e) => handleChange('nombre', e.target.value)}
+                    required
+                    disabled={!uiState.editing || uiState.saving}
+                    className={`pf-form-input ${!uiState.editing ? 'pf-disabled' : ''}`}
+                    maxLength="50"
+                  />
+                </div>
+
+                <div className="pf-form-group">
+                  <label className="pf-form-label" htmlFor="pf-apellido">
+                    <span className="pf-label-icon">👥</span>
+                    Apellido
+                  </label>
+                  <input
+                    type="text"
+                    id="pf-apellido"
+                    name="apellido"
+                    value={profileState.personalInfo.apellido}
+                    onChange={(e) => handleChange('apellido', e.target.value)}
+                    disabled={!uiState.editing || uiState.saving}
+                    className={`pf-form-input ${!uiState.editing ? 'pf-disabled' : ''}`}
+                    maxLength="50"
+                  />
+                </div>
+
+                <div className="pf-form-group">
+                  <label className="pf-form-label" htmlFor="pf-email">
+                    <span className="pf-label-icon">📧</span>
+                    Email *
+                  </label>
+                  <input
+                    type="email"
+                    id="pf-email"
+                    name="email"
+                    value={profileState.personalInfo.email}
+                    disabled={true}
+                    className="pf-form-input pf-disabled"
+                  />
+                  <div className="pf-field-note">El email no se puede cambiar</div>
+                </div>
+
+                <div className="pf-form-group">
+                  <label className="pf-form-label" htmlFor="pf-username">
+                    <span className="pf-label-icon">👤</span>
+                    Nombre de Usuario *
+                  </label>
+                  <input
+                    type="text"
+                    id="pf-username"
+                    name="username"
+                    value={profileState.personalInfo.username}
+                    onChange={(e) => handleChange('username', e.target.value)}
+                    required
+                    disabled={!uiState.editing || uiState.saving}
+                    className={`pf-form-input ${!uiState.editing ? 'pf-disabled' : ''}`}
+                    pattern="[a-zA-Z0-9_]+"
+                    title="Solo letras, números y guiones bajos"
+                    maxLength="30"
+                  />
+                </div>
+
+                <div className="pf-form-group pf-full-width">
+                  <label className="pf-form-label" htmlFor="pf-telefono">
+                    <span className="pf-label-icon">📱</span>
+                    Teléfono
+                  </label>
+                  <input
+                    type="tel"
+                    id="pf-telefono"
+                    name="telefono"
+                    value={profileState.personalInfo.telefono}
+                    onChange={(e) => handleChange('telefono', e.target.value)}
+                    disabled={!uiState.editing || uiState.saving}
+                    className={`pf-form-input ${!uiState.editing ? 'pf-disabled' : ''}`}
+                    placeholder="Ej: +34 123 456 789"
+                    pattern="[\d\s+()-]{10,15}"
+                  />
+                </div>
+              </div>
+              
+              {uiState.editing && (
+                <div className="pf-form-actions">
                   <button 
                     type="submit" 
-                    form="profile-form"
-                    className="btn-save"
-                    disabled={saving}
+                    className="pf-btn-save"
+                    disabled={uiState.saving || !uiState.hasUnsavedChanges}
                   >
-                    <span className="icon">💾</span> {saving ? 'Guardando...' : 'Guardar'}
+                    <span className="pf-icon">💾</span>
+                    {uiState.saving ? 'Guardando...' : 'Guardar Cambios'}
                   </button>
-                </>
+                </div>
               )}
-            </div>
+            </form>
           </div>
 
-          {/* Mensajes de Feedback */}
-          {message && <div className="success-message">{message}</div>}
-          {error && <div className="error-message">{error}</div>}
-
-          {/* Formulario Principal */}
-          <form id="profile-form" onSubmit={handleSubmit} className="profile-form">
-            <div className="form-row">
-              <div className="form-group">
-                <label htmlFor="nombre">Nombre *</label>
-                <input
-                  type="text"
-                  id="nombre"
-                  name="nombre"
-                  value={formData.nombre}
-                  onChange={handleChange}
-                  required
-                  disabled={!editing}
-                />
+          {/* Password Change Form */}
+          {uiState.showPasswordForm && (
+            <div className="pf-password-section">
+              <div className="pf-section-header">
+                <h3 className="pf-section-title">
+                  <span className="pf-section-icon">🔐</span>
+                  Cambiar Contraseña
+                </h3>
               </div>
-              
-              <div className="form-group">
-                <label htmlFor="apellido">Apellido</label>
-                <input
-                  type="text"
-                  id="apellido"
-                  name="apellido"
-                  value={formData.apellido}
-                  onChange={handleChange}
-                  disabled={!editing}
-                />
-              </div>
-            </div>
 
-            <div className="form-row">
-              <div className="form-group">
-                <label htmlFor="email">Email *</label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={formData.email}
-                  disabled={true}
-                  className="disabled-field"
-                />
-                <small className="field-note">El email no se puede cambiar</small>
-              </div>
-              
-              <div className="form-group">
-                <label htmlFor="username">Nombre de Usuario *</label>
-                <input
-                  type="text"
-                  id="username"
-                  name="username"
-                  value={formData.username}
-                  onChange={handleChange}
-                  required
-                  disabled={!editing}
-                />
-              </div>
-            </div>
+              <form onSubmit={handlePasswordChange} className="pf-password-form">
+                <div className="pf-form-grid">
+                  <div className="pf-form-group">
+                    <label className="pf-form-label" htmlFor="pf-oldPassword">
+                      <span className="pf-label-icon">🔑</span>
+                      Contraseña Actual *
+                    </label>
+                    <input
+                      type="password"
+                      id="pf-oldPassword"
+                      value={passwordData.oldPassword}
+                      onChange={(e) => setPasswordData(prev => ({...prev, oldPassword: e.target.value}))}
+                      required
+                      disabled={uiState.saving}
+                      className="pf-form-input"
+                    />
+                  </div>
 
-            <div className="form-group">
-              <label htmlFor="telefono">Teléfono</label>
-              <input
-                type="tel"
-                id="telefono"
-                name="telefono"
-                value={formData.telefono}
-                onChange={handleChange}
-                disabled={!editing}
-                placeholder="Ej: +34 123 456 789"
-              />
-            </div>
+                  <div className="pf-form-group">
+                    <label className="pf-form-label" htmlFor="pf-newPassword">
+                      <span className="pf-label-icon">🔄</span>
+                      Nueva Contraseña *
+                    </label>
+                    <input
+                      type="password"
+                      id="pf-newPassword"
+                      value={passwordData.newPassword}
+                      onChange={(e) => setPasswordData(prev => ({...prev, newPassword: e.target.value}))}
+                      required
+                      minLength="6"
+                      disabled={uiState.saving}
+                      className="pf-form-input"
+                    />
+                    <div className="pf-field-note">Mínimo 6 caracteres</div>
+                  </div>
 
-            {editing && (
-              <div className="form-actions">
-                <button 
-                  type="submit" 
-                  className="btn-save"
-                  disabled={saving}
-                >
-                  {saving ? 'Guardando...' : '💾 Guardar Cambios'}
-                </button>
-              </div>
-            )}
-          </form>
-
-          {/* Formulario de cambio de contraseña */}
-          {showPasswordForm && (
-            <div className="password-form-section">
-              <h3>
-                <span className="icon">🔐</span> Cambiar Contraseña
-              </h3>
-              
-              <form onSubmit={handlePasswordChange} className="password-form">
-                <div className="form-group">
-                  <label htmlFor="oldPassword">Contraseña Actual *</label>
-                  <input
-                    type="password"
-                    id="oldPassword"
-                    value={passwordData.oldPassword}
-                    onChange={(e) => setPasswordData({...passwordData, oldPassword: e.target.value})}
-                    required
-                    disabled={changingPassword}
-                  />
+                  <div className="pf-form-group">
+                    <label className="pf-form-label" htmlFor="pf-confirmPassword">
+                      <span className="pf-label-icon">✅</span>
+                      Confirmar Contraseña *
+                    </label>
+                    <input
+                      type="password"
+                      id="pf-confirmPassword"
+                      value={passwordData.confirmPassword}
+                      onChange={(e) => setPasswordData(prev => ({...prev, confirmPassword: e.target.value}))}
+                      required
+                      disabled={uiState.saving}
+                      className="pf-form-input"
+                    />
+                  </div>
                 </div>
-                
-                <div className="form-group">
-                  <label htmlFor="newPassword">Nueva Contraseña *</label>
-                  <input
-                    type="password"
-                    id="newPassword"
-                    value={passwordData.newPassword}
-                    onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})}
-                    required
-                    minLength="6"
-                    disabled={changingPassword}
-                  />
-                  <small className="field-note">Mínimo 6 caracteres</small>
-                </div>
-                
-                <div className="form-group">
-                  <label htmlFor="confirmPassword">Confirmar Contraseña *</label>
-                  <input
-                    type="password"
-                    id="confirmPassword"
-                    value={passwordData.confirmPassword}
-                    onChange={(e) => setPasswordData({...passwordData, confirmPassword: e.target.value})}
-                    required
-                    disabled={changingPassword}
-                  />
-                </div>
-                
-                <div className="form-actions">
+
+                <div className="pf-form-actions">
                   <button 
                     type="button" 
-                    className="btn-cancel"
-                    onClick={() => setShowPasswordForm(false)}
-                    disabled={changingPassword}
+                    className="pf-btn-cancel"
+                    onClick={() => setUiState(prev => ({ ...prev, showPasswordForm: false }))}
+                    disabled={uiState.saving}
                   >
+                    <span className="pf-icon">❌</span>
                     Cancelar
                   </button>
                   <button 
                     type="submit" 
-                    className="btn-save"
-                    disabled={changingPassword}
+                    className="pf-btn-save"
+                    disabled={uiState.saving}
                   >
-                    {changingPassword ? 'Cambiando...' : '🔐 Cambiar Contraseña'}
+                    <span className="pf-icon">🔐</span>
+                    {uiState.saving ? 'Cambiando...' : 'Cambiar Contraseña'}
                   </button>
                 </div>
               </form>
             </div>
           )}
 
-          {/* Sección de personalización */}
-          <div className="generation-section">
-            <h3>
-              <span className="icon">🎨</span> Personalización
-            </h3>
-            <div className="generation-info">
-              <p>
-                <strong>Avatar:</strong> Generado automáticamente con tus iniciales. 
-                Puedes cambiar el color cuando quieras.
-              </p>
-              <p>
-                <strong>Bio:</strong> Seleccionada aleatoriamente de nuestras frases predefinidas. 
-                ¡Cambia cuando quieras!
-              </p>
-              <div className="generation-buttons">
-                <button onClick={cambiarAvatar} className="gen-btn">
-                  <span className="icon">🎨</span> Cambiar color de avatar
-                </button>
-                <button onClick={cambiarBio} className="gen-btn">
-                  <span className="icon">🔄</span> Generar nueva bio
-                </button>
+          {/* Customization Section */}
+          <div className="pf-customization-section">
+            <div className="pf-section-header">
+              <h3 className="pf-section-title">
+                <span className="pf-section-icon">🎨</span>
+                Personalización
+              </h3>
+            </div>
+
+            <div className="pf-customization-content">
+              <div className="pf-customization-item">
+                <div className="pf-customization-icon">🖼️</div>
+                <div className="pf-customization-details">
+                  <h4 className="pf-customization-title">Avatar</h4>
+                  <p className="pf-customization-description">
+                    Color actual: <span 
+                      style={{ 
+                        color: profileState.customization.avatarColor,
+                        fontWeight: 'bold',
+                        backgroundColor: `${profileState.customization.avatarColor}20`,
+                        padding: '2px 8px',
+                        borderRadius: '4px',
+                        marginLeft: '8px'
+                      }}
+                    >
+                      {profileState.customization.avatarColor}
+                    </span>
+                  </p>
+                  <div className="pf-avatar-color-preview">
+                    <div className="pf-current-color" style={{ 
+                      backgroundColor: profileState.customization.avatarColor 
+                    }}></div>
+                    <span className="pf-color-name">
+                      Color {profileState.customization.avatarColorIndex + 1} de {AVATAR_COLORS.length}
+                    </span>
+                  </div>
+                  <button 
+                    onClick={cambiarAvatar}
+                    className="pf-btn-customization"
+                    disabled={uiState.saving}
+                  >
+                    <span className="pf-icon">🎨</span>
+                    Cambiar color
+                  </button>
+                </div>
+              </div>
+
+              <div className="pf-customization-item">
+                <div className="pf-customization-icon">📝</div>
+                <div className="pf-customization-details">
+                  <h4 className="pf-customization-title">Biografía</h4>
+                  <p className="pf-customization-description">
+                    {profileState.customization.bio}
+                  </p>
+                  <button 
+                    onClick={cambiarBio}
+                    className="pf-btn-customization"
+                    disabled={uiState.saving}
+                  >
+                    <span className="pf-icon">🔄</span>
+                    Nueva bio
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </main>
-      </div>
+        </div>
+      </main>
     </div>
   );
 };

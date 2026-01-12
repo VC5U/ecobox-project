@@ -2,13 +2,13 @@
 import React, { useState, useEffect } from 'react';
 import API from '../../services/api';
 import './Notificaciones.css';
-import { AppleIcon } from 'lucide-react';
 
 function Notificaciones() {
   const [notificaciones, setNotificaciones] = useState([]);
   const [loading, setLoading] = useState(true);
   const [noLeidasCount, setNoLeidasCount] = useState(0);
   const [marcandoTodas, setMarcandoTodas] = useState(false);
+  const [filtroActivo, setFiltroActivo] = useState('todas');
 
   const formatearFecha = (fechaStr) => {
     const fecha = new Date(fechaStr);
@@ -56,6 +56,7 @@ function Notificaciones() {
       setNotificaciones(ordenadas);
       const noLeidas = ordenadas.filter(n => !n.leida).length;
       setNoLeidasCount(noLeidas);
+      setFiltroActivo('todas');
     } catch (err) {
       console.error('Error al cargar notificaciones:', err);
     } finally {
@@ -117,12 +118,34 @@ function Notificaciones() {
 
   const getClasePorTipo = (tipo) => {
     switch (tipo) {
-      case 'warning': return 'notificacion-tipo-warning';
-      case 'error': return 'notificacion-tipo-error';
-      case 'success': return 'notificacion-tipo-success';
-      default: return 'notificacion-tipo-info';
+      case 'warning': return 'nt-notificacion-tipo-warning';
+      case 'error': return 'nt-notificacion-tipo-error';
+      case 'success': return 'nt-notificacion-tipo-success';
+      default: return 'nt-notificacion-tipo-info';
     }
   };
+
+  const aplicarFiltro = (filtro) => {
+    setFiltroActivo(filtro);
+    
+    if (filtro === 'todas') {
+      fetchNotificaciones();
+    } else if (filtro === 'sin-leer') {
+      const sinLeer = notificaciones.filter(n => !n.leida);
+      setNoLeidasCount(sinLeer.length);
+    } else if (filtro === 'leidas') {
+      const leidas = notificaciones.filter(n => n.leida);
+      setNoLeidasCount(0);
+    }
+  };
+
+  // Filtrar notificaciones según el filtro activo
+  const notificacionesFiltradas = notificaciones.filter(notif => {
+    if (filtroActivo === 'todas') return true;
+    if (filtroActivo === 'sin-leer') return !notif.leida;
+    if (filtroActivo === 'leidas') return notif.leida;
+    return true;
+  });
 
   useEffect(() => {
     fetchNotificaciones();
@@ -134,84 +157,108 @@ function Notificaciones() {
 
   if (loading) {
     return (
-      <div className="notificaciones-loading">
-        <div className="loading-spinner"></div>
+      <div className="nt-notificaciones-loading">
+        <div className="nt-loading-spinner"></div>
       </div>
     );
   }
 
   return (
-    <div className="notificaciones-container">
+    <div className="nt-notificaciones-container">
       {/* Encabezado */}
-      <div className="notificaciones-header">
-        <h1 className="notificaciones-titulo">Notificaciones</h1>
-        <div className="notificaciones-subheader">
-          <div className="notificaciones-contadores">
-            <span className="notificaciones-contador">
-              {noLeidasCount} notificación{noLeidasCount !== 1 ? 'es' : ''} sin leer
+      <div className="nt-notificaciones-header">
+        <h1 className="nt-notificaciones-titulo">Notificaciones</h1>
+        <div className="nt-notificaciones-subheader">
+          <div className="nt-notificaciones-contadores">
+            <span className="nt-notificaciones-contador">
+              {noLeidasCount} sin leer
             </span>
             {noLeidasCount > 0 && (
               <button
                 onClick={marcarTodasComoLeidas}
                 disabled={marcandoTodas}
-                className="notificaciones-marcar-todas-btn"
+                className="nt-notificaciones-marcar-todas-btn"
               >
                 {marcandoTodas ? 'Marcando...' : 'Marcar todas como leídas'}
               </button>
             )}
           </div>
-          <div className="notificaciones-total">
+          <div className="nt-notificaciones-total">
             Total: {notificaciones.length}
           </div>
         </div>
       </div>
-
+{/* Filtros */}
+      <div className="nt-notificaciones-filtros">
+        <button
+          onClick={() => aplicarFiltro('todas')}
+          className={`nt-notificaciones-filtro-btn ${filtroActivo === 'todas' ? 'nt-filtro-activo' : ''}`}
+        >
+          Todas
+        </button>
+        <button
+          onClick={() => aplicarFiltro('sin-leer')}
+          className={`nt-notificaciones-filtro-btn ${filtroActivo === 'sin-leer' ? 'nt-filtro-activo' : ''}`}
+        >
+          Sin leer
+        </button>
+        <button
+          onClick={() => aplicarFiltro('leidas')}
+          className={`nt-notificaciones-filtro-btn ${filtroActivo === 'leidas' ? 'nt-filtro-activo' : ''}`}
+        >
+          Leídas
+        </button>
+      </div>
       {/* Lista de notificaciones */}
-      <div className="notificaciones-lista-container">
-        {notificaciones.length === 0 ? (
-          <div className="notificaciones-vacio">
-            No hay notificaciones
+      <div className="nt-notificaciones-lista-container">
+        {notificacionesFiltradas.length === 0 ? (
+          <div className="nt-notificaciones-vacio">
+            {filtroActivo === 'todas' 
+              ? 'No hay notificaciones' 
+              : filtroActivo === 'sin-leer'
+                ? 'No hay notificaciones sin leer'
+                : 'No hay notificaciones leídas'}
           </div>
         ) : (
-          <ul className="notificaciones-lista">
-            {notificaciones.map((notificacion) => (
+          <ul className="nt-notificaciones-lista">
+            {notificacionesFiltradas.map((notificacion) => (
               <li
                 key={notificacion.id}
-                className={`notificacion-item ${!notificacion.leida ? 'notificacion-no-leida' : ''}`}
+                className={`nt-notificacion-item ${!notificacion.leida ? 'nt-notificacion-no-leida' : ''}`}
               >
-                <div className="notificacion-contenido">
+                <div className="nt-notificacion-contenido">
                   {/* Checkbox */}
-                  <div className="notificacion-checkbox">
+                  <div className="nt-notificacion-checkbox">
                     <input
                       type="checkbox"
                       checked={notificacion.leida}
                       onChange={() => !notificacion.leida && marcarComoLeida(notificacion.id)}
-                      className="notificacion-checkbox-input"
+                      className="nt-notificacion-checkbox-input"
                     />
                   </div>
 
                   {/* Icono y tipo */}
-                  <div className="notificacion-icono">
-                    <span className="notificacion-icono-simbolo">
+                  <div className="nt-notificacion-icono">
+                    <span className="nt-notificacion-icono-simbolo">
                       {getIconoPorTipo(notificacion.tipo)}
                     </span>
-                    <span className={`notificacion-tipo ${getClasePorTipo(notificacion.tipo)}`}>
+                    <span className={`nt-notificacion-tipo ${getClasePorTipo(notificacion.tipo)}`}>
                       {notificacion.tipo}
                     </span>
                     {!notificacion.leida && (
-                      <span className="notificacion-punto-no-leida"></span>
+                      <span className="nt-notificacion-punto-no-leida"></span>
                     )}
                   </div>
 
                   {/* Contenido principal */}
-                  <div className="notificacion-info">
-                    <div className="notificacion-fecha">
+                  <div className="nt-notificacion-info">
+                    <div className="nt-notificacion-fecha">
                       {formatearFecha(notificacion.fecha_creacion)}
                     </div>
-                    <p className={`notificacion-mensaje ${!notificacion.leida ? 'notificacion-mensaje-no-leida' : ''}`}>
+                    <p className={`nt-notificacion-mensaje ${!notificacion.leida ? 'nt-notificacion-mensaje-no-leida' : ''}`}>
                       {notificacion.mensaje}
                     </p>
-                    <div className="notificacion-tiempo">
+                    <div className="nt-notificacion-tiempo">
                       {calcularTiempoTranscurrido(notificacion.fecha_creacion)}
                     </div>
                     
@@ -219,7 +266,7 @@ function Notificaciones() {
                     {!notificacion.leida && (
                       <button
                         onClick={() => marcarComoLeida(notificacion.id)}
-                        className="notificacion-marcar-btn"
+                        className="nt-notificacion-marcar-btn"
                       >
                         Marcar como leída
                       </button>
@@ -232,45 +279,7 @@ function Notificaciones() {
         )}
       </div>
 
-      {/* Filtros */}
-      <div className="notificaciones-filtros">
-        <button
-          onClick={() => fetchNotificaciones()}
-          className="notificaciones-filtro-btn"
-        >
-          Todas
-        </button>
-        <button
-          onClick={async () => {
-            const token = localStorage.getItem('token');
-            const response = await API.get('/notificaciones/', {
-              headers: { Authorization: `Bearer ${token}` }
-            });
-            const todas = Array.isArray(response.data) ? response.data : response.data.results;
-            const sinLeer = todas.filter(n => !n.leida);
-            setNotificaciones(sinLeer);
-            setNoLeidasCount(sinLeer.length);
-          }}
-          className="notificaciones-filtro-btn"
-        >
-          Sin leer
-        </button>
-        <button
-          onClick={async () => {
-            const token = localStorage.getItem('token');
-            const response = await API.get('/notificaciones/', {
-              headers: { Authorization: `Bearer ${token}` }
-            });
-            const todas = Array.isArray(response.data) ? response.data : response.data.results;
-            const leidas = todas.filter(n => n.leida);
-            setNotificaciones(leidas);
-            setNoLeidasCount(0);
-          }}
-          className="notificaciones-filtro-btn"
-        >
-          Leídas
-        </button>
-      </div>
+      
     </div>
   );
 }

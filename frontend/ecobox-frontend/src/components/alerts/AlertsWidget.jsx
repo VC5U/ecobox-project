@@ -1,19 +1,21 @@
 // src/components/alerts/AlertsWidget.jsx
 import React, { useState, useEffect, useCallback } from 'react';
-import API from '../../services/api'; // ¡IMPORTA AXIOS!
+import API from '../../services/api';
 import './AlertsWidget.css';
+import { Link } from 'react-router-dom';
 
 const AlertsWidget = () => {
   const [alerts, setAlerts] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showAll, setShowAll] = useState(false);
+  const [notificationPermission, setNotificationPermission] = useState('default');
 
   const fetchAlerts = useCallback(async () => {
     try {
-      console.log('🔍 Iniciando fetchAlerts...');
+      setLoading(true);
+      console.log('🔍 Obteniendo alertas...');
       
-      // ¡USAR AXIOS EN LUGAR DE FETCH!
       const response = await API.get('/alerts/', {
         params: {
           limit: 10,
@@ -21,11 +23,8 @@ const AlertsWidget = () => {
         }
       });
       
-      console.log('✅ Respuesta completa del servidor:', response);
-      
       if (response.data && response.data.status === 'success') {
         const data = response.data;
-        console.log('📦 Datos recibidos:', data);
         
         setAlerts(data.alertas || []);
         setStats({
@@ -34,13 +33,12 @@ const AlertsWidget = () => {
           critical: data.criticas_pendientes || 0
         });
       } else {
-        console.warn('⚠️ Respuesta inesperada:', response.data);
         throw new Error('Formato de respuesta inesperado');
       }
     } catch (error) {
-      console.log('⚠️ Error cargando alertas:', error);
+      console.error('⚠️ Error cargando alertas:', error);
       
-      // Datos de ejemplo usando TU estructura
+      // Datos de ejemplo para desarrollo
       const exampleAlerts = [
         {
           id: 1,
@@ -96,18 +94,15 @@ const AlertsWidget = () => {
 
   const markAsRead = async (alertId) => {
     try {
-      // ¡USAR AXIOS!
       const response = await API.post('/alerts/mark-read/', {
         alert_id: alertId
       });
       
       if (response.data && response.data.status === 'success') {
-        // Actualizar localmente
         setAlerts(alerts.map(alert => 
           alert.id === alertId ? { ...alert, leida: true } : alert
         ));
         
-        // Actualizar estadísticas
         if (stats) {
           setStats({
             ...stats,
@@ -116,22 +111,19 @@ const AlertsWidget = () => {
         }
       }
     } catch (error) {
-      console.log('⚠️ Error marcando como leída:', error);
+      console.error('⚠️ Error marcando como leída:', error);
     }
   };
 
   const markAsResolved = async (alertId) => {
     try {
-      // ¡USAR AXIOS!
       const response = await API.post('/alerts/mark-resolved/', {
         alert_id: alertId
       });
       
       if (response.data && response.data.status === 'success') {
-        // Remover de la lista
         setAlerts(alerts.filter(alert => alert.id !== alertId));
         
-        // Actualizar estadísticas
         if (stats) {
           setStats({
             ...stats,
@@ -142,21 +134,18 @@ const AlertsWidget = () => {
         }
       }
     } catch (error) {
-      console.log('⚠️ Error resolviendo alerta:', error);
+      console.error('⚠️ Error resolviendo alerta:', error);
     }
   };
 
   const createTestAlert = async () => {
     try {
-      // ¡USAR AXIOS!
       const response = await API.post('/alerts/test/');
       
       if (response.data && response.data.status === 'success') {
         const data = response.data;
-        // Agregar la nueva alerta al principio
         setAlerts([data.alerta, ...alerts]);
         
-        // Actualizar estadísticas
         if (stats) {
           setStats({
             ...stats,
@@ -166,20 +155,23 @@ const AlertsWidget = () => {
           });
         }
         
-        // Mostrar notificación del navegador
         showBrowserNotification(data.alerta.titulo, data.alerta.mensaje);
       }
     } catch (error) {
-      console.log('⚠️ Error creando alerta de prueba:', error);
+      console.error('⚠️ Error creando alerta de prueba:', error);
     }
   };
 
   const requestNotificationPermission = async () => {
-    if ('Notification' in window && Notification.permission === 'default') {
+    if ('Notification' in window) {
       const permission = await Notification.requestPermission();
+      setNotificationPermission(permission);
+      
       if (permission === 'granted') {
-        console.log('✅ Permiso para notificaciones concedido');
-        showBrowserNotification('Sistema de alertas activado', 'Recibirás notificaciones importantes sobre tus plantas');
+        showBrowserNotification(
+          '🔔 Sistema de alertas activado',
+          'Recibirás notificaciones importantes sobre tus plantas'
+        );
       }
     }
   };
@@ -188,9 +180,10 @@ const AlertsWidget = () => {
     if ('Notification' in window && Notification.permission === 'granted') {
       new Notification(title, {
         body: message,
-        icon: '/logo.png',
-        badge: '/logo.png',
-        tag: 'ecobox-alert'
+        icon: '/favicon.ico',
+        badge: '/favicon.ico',
+        tag: 'ecobox-alert',
+        requireInteraction: true
       });
     }
   };
@@ -198,29 +191,44 @@ const AlertsWidget = () => {
   useEffect(() => {
     fetchAlerts();
     
-    // Solicitar permiso para notificaciones
-    requestNotificationPermission();
+    if ('Notification' in window) {
+      setNotificationPermission(Notification.permission);
+    }
     
-    // Configurar polling cada 60 segundos
     const interval = setInterval(fetchAlerts, 60000);
     return () => clearInterval(interval);
   }, [fetchAlerts]);
 
-  // Mostrar notificación cuando hay alertas críticas nuevas
   useEffect(() => {
     if (stats && stats.critical > 0) {
       const criticalAlert = alerts.find(a => !a.leida && a.tipo === 'CRITICA');
-      if (criticalAlert && !criticalAlert.notificada) {
-        showBrowserNotification(`🚨 ${criticalAlert.plant_nombre}`, criticalAlert.mensaje);
-        // Marcar como notificada (en un sistema real, esto se haría en el backend)
+      if (criticalAlert) {
+        showBrowserNotification(
+          `🚨 ${criticalAlert.plant_nombre}`,
+          criticalAlert.mensaje
+        );
       }
     }
   }, [alerts, stats]);
 
+  const formatTimeAgo = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    
+    if (diffMins < 60) return `Hace ${diffMins} min`;
+    if (diffHours < 24) return `Hace ${diffHours} h`;
+    if (diffDays < 7) return `Hace ${diffDays} días`;
+    return date.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
+  };
+
   if (loading) {
     return (
-      <div className="alerts-widget loading">
-        <div className="spinner"></div>
+      <div className="aw-alerts-widget aw-loading">
+        <div className="aw-spinner"></div>
         <p>Cargando alertas...</p>
       </div>
     );
@@ -229,101 +237,162 @@ const AlertsWidget = () => {
   const displayedAlerts = showAll ? alerts : alerts.slice(0, 3);
 
   return (
-    <div className="alerts-widget">
-      <div className="alerts-header">
-        <div className="alerts-title">
-          <h3>🔔 Alertas de Plantas</h3>
+    <div className="aw-alerts-widget">
+      {/* Header */}
+      <div className="aw-header">
+        <div className="aw-header-left">
+          <h3 className="aw-title">
+            <span className="aw-title-icon">🔔</span>
+            Alertas de Plantas
+          </h3>
           {stats && stats.unread > 0 && (
-            <span className="unread-badge">{stats.unread}</span>
+            <span className="aw-unread-badge">
+              {stats.unread}
+            </span>
           )}
         </div>
-        <div className="alerts-stats">
-          <span className={`stat critical ${stats?.critical > 0 ? 'active' : ''}`}>
-            🚨 {stats?.critical || 0} crítica{stats?.critical !== 1 ? 's' : ''}
-          </span>
+        
+        <div className="aw-header-right">
+          <div className="aw-stats">
+            <span className={`aw-stat aw-stat-critical ${stats?.critical > 0 ? 'aw-active' : ''}`}>
+              🚨 {stats?.critical || 0}
+            </span>
+            <span className="aw-stat aw-stat-total">
+              📋 {stats?.total || 0}
+            </span>
+          </div>
+          
           <button 
             onClick={createTestAlert}
-            className="btn-test-alert"
+            className="aw-btn-test"
             title="Crear alerta de prueba"
           >
             🧪 Probar
           </button>
         </div>
       </div>
-      
+
+      {/* Alertas */}
       {alerts.length === 0 ? (
-        <div className="no-alerts">
-          <div className="no-alerts-icon">✅</div>
-          <p>No hay alertas pendientes</p>
-          <small>Todas tus plantas están saludables</small>
+        <div className="aw-no-alerts">
+          <div className="aw-empty-icon">✅</div>
+          <h4 className="aw-empty-title">Sin alertas</h4>
+          <p className="aw-empty-message">Todas tus plantas están saludables</p>
         </div>
       ) : (
         <>
-          <div className="alerts-list">
+          <div className="aw-alerts-list">
             {displayedAlerts.map(alert => (
               <div 
                 key={alert.id} 
-                className={`alert-item ${alert.leida ? 'read' : 'unread'} priority-${alert.prioridad.toLowerCase()}`}
+                className={`aw-alert-item ${alert.leida ? 'aw-read' : 'aw-unread'} aw-priority-${alert.prioridad.toLowerCase()}`}
               >
-                <div className="alert-icon" style={{ color: alert.color }}>
+                <div 
+                  className="aw-alert-icon"
+                  style={{ 
+                    backgroundColor: `${alert.color}15`,
+                    borderColor: alert.color,
+                    color: alert.color 
+                  }}
+                >
                   {alert.icono || '📢'}
                 </div>
-                <div className="alert-content">
-                  <div className="alert-header">
-                    <div>
-                      <h4 className="alert-title">{alert.titulo}</h4>
-                      <p className="alert-plant">🌿 {alert.plant_nombre}</p>
+                
+                <div className="aw-alert-content">
+                  <div className="aw-alert-header">
+                    <div className="aw-alert-info">
+                      <h4 className="aw-alert-title">{alert.titulo}</h4>
+                      <div className="aw-alert-meta">
+                        <span className="aw-alert-plant">
+                          <span className="aw-plant-icon">🌿</span>
+                          {alert.plant_nombre}
+                        </span>
+                        <span className="aw-alert-time">
+                          {formatTimeAgo(alert.creada_en)}
+                        </span>
+                      </div>
                     </div>
-                    <div className="alert-meta">
-                      <span className={`alert-priority ${alert.prioridad.toLowerCase()}`}>
+                    
+                    <div className="aw-alert-status">
+                      <span className={`aw-priority-badge aw-priority-${alert.prioridad.toLowerCase()}`}>
                         {alert.tipo}
                       </span>
-                      <span className="alert-time">
-                        {new Date(alert.creada_en).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </span>
+                      {!alert.leida && (
+                        <span className="aw-unread-dot"></span>
+                      )}
                     </div>
                   </div>
-                  <p className="alert-message">{alert.mensaje}</p>
-                  <div className="alert-actions">
+                  
+                  <p className="aw-alert-message">{alert.mensaje}</p>
+                  
+                  <div className="aw-alert-actions">
                     {!alert.leida && (
                       <button 
                         onClick={() => markAsRead(alert.id)}
-                        className="btn-mark-read"
+                        className="aw-btn-mark-read"
                       >
-                        ✅ Leída
+                        <span className="aw-btn-icon">👁️</span>
+                        Marcar como leída
                       </button>
                     )}
                     <button 
                       onClick={() => markAsResolved(alert.id)}
-                      className="btn-resolve"
+                      className="aw-btn-resolve"
                     >
-                      ✔️ Resolver
+                      <span className="aw-btn-icon">✅</span>
+                      Resolver
                     </button>
                   </div>
                 </div>
               </div>
             ))}
           </div>
-          
+
+          {/* Mostrar más/menos */}
           {alerts.length > 3 && (
             <button 
               onClick={() => setShowAll(!showAll)}
-              className="btn-show-all"
+              className="aw-btn-toggle"
             >
-              {showAll ? '↑ Mostrar menos' : `↓ Ver todas (${alerts.length})`}
+              {showAll ? (
+                <>
+                  <span className="aw-toggle-icon">↑</span>
+                  Mostrar menos
+                </>
+              ) : (
+                <>
+                  <span className="aw-toggle-icon">↓</span>
+                  Ver todas ({alerts.length})
+                </>
+              )}
             </button>
           )}
-          
-          <div className="alerts-footer">
-            <button 
-              onClick={fetchAlerts}
-              className="btn-refresh"
-            >
-              🔄 Actualizar
-            </button>
-            <a href="/alerts" className="link-view-all">
-              Historial completo →
-            </a>
+
+          {/* Footer */}
+          <div className="aw-footer">
+            <div className="aw-footer-left">
+              {notificationPermission === 'default' && (
+                <button 
+                  onClick={requestNotificationPermission}
+                  className="aw-btn-notifications"
+                >
+                  🔔 Activar notificaciones
+                </button>
+              )}
+            </div>
+            
+            <div className="aw-footer-right">
+              <button 
+                onClick={fetchAlerts}
+                className="aw-btn-refresh"
+              >
+                <span className="aw-refresh-icon">🔄</span>
+                Actualizar
+              </button>
+              <Link to="/alerts" className="aw-link-view-all">
+                Historial completo →
+              </Link>
+            </div>
           </div>
         </>
       )}

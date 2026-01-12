@@ -1,4 +1,4 @@
-// src/pages/Dashboard.js - VERSIÓN FINAL CORREGIDA CON AXIOS
+// src/pages/Dashboard.js
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import './Dashboard.css';
@@ -6,10 +6,10 @@ import AIWidget from '../components/ai/AIWidget';
 import RealTimeHumidityChart from '../components/Charts/RealTimeHumidityChart';
 import AlertsWidget from '../components/alerts/AlertsWidget';
 import WateringControl from '../components/WateringControl';
-import API from '../services/api'; 
+import API from '../services/api';
 
 const Dashboard = () => {
-  const { user, logout } = useAuth(); 
+  const { user, logout } = useAuth();
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showChatbot, setShowChatbot] = useState(false);
@@ -17,16 +17,9 @@ const Dashboard = () => {
   const [selectedPlant, setSelectedPlant] = useState(null);
   const [availablePlants, setAvailablePlants] = useState([]);
 
-  // Funciones utilitarias básicas
+  // Funciones utilitarias
   const showNotification = useCallback((message, type = 'info') => {
     console.log(`🔔 ${type.toUpperCase()}: ${message}`);
-    if (type === 'error') {
-      alert(`❌ ${message}`);
-    } else if (type === 'success') {
-      alert(`✅ ${message}`);
-    } else {
-      alert(`ℹ️ ${message}`);
-    }
   }, []);
 
   const handleAskAI = useCallback(() => {
@@ -37,192 +30,64 @@ const Dashboard = () => {
     setShowChatbot(false);
   }, []);
 
-  // Función para obtener plantas disponibles - CORREGIDA CON AXIOS
-const fetchAvailablePlants = useCallback(async () => {
-  try {
-    console.log('🌿 Obteniendo mis plantas (activas)...');
-    
-    // USAR EL ENDPOINT CORRECTO PARA PLANTAS ACTIVAS DEL USUARIO
-    const response = await API.get('/plantas/mis_plantas/');
-    
-    console.log('✅ Respuesta mis_plantas:', response.data);
-    
-    let plantsArray = [];
-    const data = response.data;
-    
-    // Manejar diferentes formatos de respuesta
-    if (data.results && Array.isArray(data.results)) {
-      plantsArray = data.results;  // DRF con paginación
-    } else if (Array.isArray(data)) {
-      plantsArray = data;  // Array directo
-    } else if (data.plantas && Array.isArray(data.plantas)) {
-      plantsArray = data.plantas;  // Estructura personalizada
-    } else if (data.data && Array.isArray(data.data)) {
-      plantsArray = data.data;  // Otra estructura común
-    } else {
-      console.warn('⚠️ Formato de respuesta no reconocido:', data);
-      plantsArray = [];
-    }
-    
-    console.log(`📊 Total plantas recibidas: ${plantsArray.length}`);
-    
-    // Verificar información de las plantas (debug)
-    if (plantsArray.length > 0) {
-      console.log('🔍 Información de las primeras 3 plantas:');
-      plantsArray.slice(0, 3).forEach((plant, i) => {
-        console.log(`${i+1}. ID: ${plant.id || 'N/A'}, 
-          Nombre: ${plant.nombrePersonalizado || plant.nombre || 'Sin nombre'}, 
-          Familia: ${plant.familia || plant.familia_nombre || 'Sin familia'}`);
-      });
-    }
-    
-    // Procesar y limpiar las plantas
-    const processedPlants = plantsArray.map((plant, index) => {
-      // Asignar ID si no existe
-      const plantId = plant.id || index + 1;
-      
-      // Determinar nombre
-      let nombreMostrar = plant.nombrePersonalizado || plant.nombre || `Planta ${plantId}`;
-      
-      // Determinar familia
-      let familiaMostrar = '';
-      if (plant.familia && typeof plant.familia === 'object') {
-        familiaMostrar = plant.familia.nombre || '';
-      } else if (plant.familia) {
-        familiaMostrar = plant.familia;
-      } else if (plant.familia_nombre) {
-        familiaMostrar = plant.familia_nombre;
-      }
-      
-      // Determinar especie
-      const especieMostrar = plant.especie || plant.nombre_cientifico || 'Desconocida';
-      
-      // Determinar estado (si existe)
-      const estado = plant.estado || plant.health_status || 'unknown';
-      const alertasActivas = plant.alertas_activas || plant.active_alerts || 0;
-      const necesitaRiego = plant.necesita_riego || plant.needs_watering || false;
-      
-      // Calcular prioridad para ordenamiento
-      let priority = 0;
-      if (estado === 'critico') priority += 3;
-      if (alertasActivas > 0) priority += 2;
-      if (necesitaRiego) priority += 1;
-      
-      return {
-        ...plant,
-        id: plantId,
-        nombrePersonalizado: nombreMostrar,
-        nombreMostrar: nombreMostrar,
-        familia: familiaMostrar,
-        familiaMostrar: familiaMostrar,
-        especie: especieMostrar,
-        estado: estado,
-        alertas_activas: alertasActivas,
-        necesita_riego: necesitaRiego,
-        priority: priority,
-        // Datos adicionales si existen
-        ultima_medicion: plant.ultima_medicion || plant.last_measurement,
-        humedad_actual: plant.humedad_actual || plant.current_humidity,
-        temperatura_actual: plant.temperatura_actual || plant.current_temperature
-      };
-    });
-    
-    // Ordenar plantas por prioridad (las que necesitan atención primero)
-    const sortedPlants = [...processedPlants].sort((a, b) => {
-      // Primero por prioridad (mayor primero)
-      if (b.priority !== a.priority) {
-        return b.priority - a.priority;
-      }
-      // Luego alfabéticamente por nombre
-      return a.nombreMostrar.localeCompare(b.nombreMostrar);
-    });
-    
-    // Limitar a las 15 plantas más importantes para el dropdown
-const importantPlants = processedPlants;
-    
-    console.log(`✅ ${importantPlants.length} plantas importantes (de ${processedPlants.length} totales):`);
-    importantPlants.forEach((plant, i) => {
-      const statusIcon = plant.estado === 'critico' ? '🔴' : 
-                        plant.alertas_activas > 0 ? '🟡' : 
-                        '🟢';
-      console.log(`${i+1}. ${statusIcon} ${plant.nombreMostrar} (ID: ${plant.id}) - ${plant.familiaMostrar || 'Sin familia'}`);
-    });
-    
-    setAvailablePlants(importantPlants);
-    
-    // Seleccionar primera planta solo si no hay selección
-    if (importantPlants.length > 0 && !selectedPlant) {
-      const firstPlant = importantPlants[0];
-      const newSelectedPlant = {
-        id: firstPlant.id,
-        nombre: firstPlant.nombreMostrar,
-        familia: firstPlant.familiaMostrar,
-        estado: firstPlant.estado
-      };
-      
-      setSelectedPlant(newSelectedPlant);
-      console.log(`🌱 Planta seleccionada por defecto: ${firstPlant.nombreMostrar} (${firstPlant.estado})`);
-    }
-    
-    if (importantPlants.length === 0) {
-      console.log('ℹ️ El usuario no tiene plantas activas');
-      // Mostrar mensaje amigable al usuario
-      setAvailablePlants([]);
-      
-      // Si había una planta seleccionada pero ya no existe, limpiar
-      if (selectedPlant) {
-        setSelectedPlant(null);
-      }
-    }
-    
-  } catch (error) {
-    console.error('❌ Error obteniendo mis plantas:', error);
-    
-    // Fallback: intentar con el endpoint general como último recurso
+  // Función para obtener plantas disponibles
+  const fetchAvailablePlants = useCallback(async () => {
     try {
-      console.log('🔄 Intentando endpoint general /plantas/ como fallback...');
-      const fallbackResponse = await API.get('/plantas/');
+      console.log('🌿 Obteniendo mis plantas (activas)...');
       
-      let fallbackPlants = [];
-      const fallbackData = fallbackResponse.data;
+      const response = await API.get('/plantas/mis_plantas/');
       
-      if (Array.isArray(fallbackData)) {
-        fallbackPlants = fallbackData;
-      } else if (fallbackData.results) {
-        fallbackPlants = fallbackData.results;
+      console.log('✅ Respuesta mis_plantas:', response.data);
+      
+      let plantsArray = [];
+      const data = response.data;
+      
+      if (data.results && Array.isArray(data.results)) {
+        plantsArray = data.results;
+      } else if (Array.isArray(data)) {
+        plantsArray = data;
+      } else if (data.plantas && Array.isArray(data.plantas)) {
+        plantsArray = data.plantas;
+      } else if (data.data && Array.isArray(data.data)) {
+        plantsArray = data.data;
+      } else {
+        console.warn('⚠️ Formato de respuesta no reconocido:', data);
+        plantsArray = [];
       }
       
-      // Procesar plantas del fallback
-      const processedFallback = fallbackPlants
-        .slice(0, 10) // Limitar a 10
-        .map((plant, index) => ({
+      const processedPlants = plantsArray.map((plant, index) => {
+        const plantId = plant.id || index + 1;
+        let nombreMostrar = plant.nombrePersonalizado || plant.nombre || `Planta ${plantId}`;
+        let familiaMostrar = plant.familia || plant.familia_nombre || 'Mi Jardín';
+        
+        return {
           ...plant,
-          id: plant.id || index + 1,
-          nombrePersonalizado: plant.nombrePersonalizado || plant.nombre || `Planta ${plant.id || index + 1}`,
-          nombreMostrar: plant.nombrePersonalizado || plant.nombre || `Planta ${plant.id || index + 1}`,
-          familia: plant.familia || 'Sin familia',
-          familiaMostrar: plant.familia || 'Sin familia',
+          id: plantId,
+          nombrePersonalizado: nombreMostrar,
+          nombreMostrar: nombreMostrar,
+          familia: familiaMostrar,
+          familiaMostrar: familiaMostrar,
           especie: plant.especie || 'Desconocida',
-          estado: 'unknown',
-          alertas_activas: 0,
-          necesita_riego: false,
-          priority: 0
-        }));
+          estado: plant.estado || 'normal',
+          alertas_activas: plant.alertas_activas || 0,
+          necesita_riego: plant.necesita_riego || false,
+        };
+      });
       
-      console.log(`🔄 Usando ${processedFallback.length} plantas del fallback`);
-      setAvailablePlants(processedFallback);
+      setAvailablePlants(processedPlants);
       
-      if (processedFallback.length > 0 && !selectedPlant) {
+      if (processedPlants.length > 0 && !selectedPlant) {
+        const firstPlant = processedPlants[0];
         setSelectedPlant({
-          id: processedFallback[0].id,
-          nombre: processedFallback[0].nombreMostrar
+          id: firstPlant.id,
+          nombre: firstPlant.nombreMostrar,
+          familia: firstPlant.familiaMostrar,
+          estado: firstPlant.estado
         });
       }
       
-    } catch (fallbackError) {
-      console.error('❌ Fallback también falló:', fallbackError);
-      
-      // Último recurso: datos de ejemplo
+    } catch (error) {
+      console.error('❌ Error obteniendo mis plantas:', error);
       const examplePlants = [
         { 
           id: 1, 
@@ -234,7 +99,6 @@ const importantPlants = processedPlants;
           estado: 'normal',
           alertas_activas: 0,
           necesita_riego: false,
-          priority: 0
         },
         { 
           id: 2, 
@@ -246,23 +110,9 @@ const importantPlants = processedPlants;
           estado: 'normal',
           alertas_activas: 0,
           necesita_riego: false,
-          priority: 0
-        },
-        { 
-          id: 3, 
-          nombrePersonalizado: 'Tomate Cherry', 
-          nombreMostrar: 'Tomate Cherry',
-          especie: 'Solanum lycopersicum', 
-          familia: 'Huerto',
-          familiaMostrar: 'Huerto',
-          estado: 'normal',
-          alertas_activas: 0,
-          necesita_riego: false,
-          priority: 0
         }
       ];
       
-      console.log('📋 Usando datos de ejemplo (3 plantas)');
       setAvailablePlants(examplePlants);
       
       if (!selectedPlant) {
@@ -273,18 +123,13 @@ const importantPlants = processedPlants;
         });
       }
     }
-  }
-}, [selectedPlant]);
-  // Función fetchAIStats - CORREGIDA CON AXIOS
+  }, [selectedPlant]);
+
+  // Función fetchAIStats
   const fetchAIStats = useCallback(async () => {
     try {
-      console.log('🔄 Obteniendo estadísticas de IA...');
-      
-      // USAR AXIOS EN LUGAR DE FETCH
       const response = await API.get('/ai/status/');
-      
       const data = response.data;
-      console.log('✅ Datos de IA:', data);
       
       setAiStats({
         status: data.status || 'active',
@@ -297,16 +142,9 @@ const importantPlants = processedPlants;
           weekly_trend: '+12%',
           uptime: '7 días'
         },
-        recomendaciones: data.recomendaciones || [
-          'Regar planta "Suculenta Mía"',
-          'Revisar temperatura de "Orquídea"',
-          'Fertilizar "Lavanda" próxima semana'
-        ]
       });
       
     } catch (error) {
-      // Si falla la API, usar datos por defecto
-      console.log('⚠️ API IA no disponible, usando datos por defecto:', error.message || error);
       setAiStats({
         status: 'active',
         version: '1.0.0',
@@ -318,124 +156,75 @@ const importantPlants = processedPlants;
           weekly_trend: '+12%',
           uptime: '7 días'
         },
-        recomendaciones: [
-          'Regar planta "Suculenta Mía" - Humedad al 20%',
-          'Temperatura muy baja para "Orquídea Blanca"',
-          'Fertilizar "Lavanda" la próxima semana'
-        ]
       });
     }
   }, []);
 
-  // Funciones que USAN fetchAIStats - CORREGIDAS CON AXIOS
-  const handleTrainModels = useCallback(async () => {
+  // Función fetchDashboardData
+  const fetchDashboardData = useCallback(async () => {
     try {
-      // USAR AXIOS EN LUGAR DE FETCH
-      const response = await API.post('/ai/control/', { action: 'train_all' });
+      console.log('🔄 Obteniendo datos del dashboard...');
       
-      if (response.data) {
-        showNotification('✅ Entrenamiento iniciado.', 'success');
-        setTimeout(fetchAIStats, 5000);
-      } else {
-        showNotification('⚠️ Error iniciando entrenamiento', 'error');
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      showNotification('❌ Error de conexión', 'error');
-    }
-  }, [showNotification, fetchAIStats]);
-
-  const handleRefreshAI = useCallback(() => {
-    fetchAIStats();
-    showNotification('🔄 Datos de IA actualizados', 'info');
-  }, [fetchAIStats, showNotification]);
-
-  const handleGetPredictions = useCallback(async () => {
-    try {
-      // USAR AXIOS EN LUGAR DE FETCH
-      const response = await API.get('/ai/predict/');
-      
+      const response = await API.get('/dashboard/');
       const data = response.data;
-      showNotification(`📊 ${data.count || 0} predicciones generadas`, 'success');
-      fetchAIStats();
+      
+      let totalPlantasReales = data.total_plantas || 0;
+      
+      try {
+        const plantasResponse = await API.get('/plantas/mis_plantas/');
+        const plantasData = plantasResponse.data;
+        
+        let plantasArray = [];
+        if (plantasData.results && Array.isArray(plantasData.results)) {
+          plantasArray = plantasData.results;
+        } else if (Array.isArray(plantasData)) {
+          plantasArray = plantasData;
+        } else if (plantasData.plantas && Array.isArray(plantasData.plantas)) {
+          plantasArray = plantasData.plantas;
+        }
+        
+        totalPlantasReales = plantasArray.length;
+        
+      } catch (plantasError) {
+        console.warn('⚠️ No se pudo obtener el número real de plantas:', plantasError.message);
+      }
+      
+      setDashboardData({
+        ...data,
+        total_plantas: totalPlantasReales,
+        plantas_necesitan_agua: data.plantas_necesitan_agua || 0,
+        humedad_promedio: data.humedad_promedio || '65%',
+        ultima_actualizacion: data.ultima_actualizacion || new Date().toLocaleString(),
+        modo: data.modo || 'datos_reales',
+        metricas_avanzadas: {
+          plantas_activas: totalPlantasReales,
+          sensores_activos: data.metricas_avanzadas?.sensores_activos || 0,
+          recomendaciones_activas: data.metricas_avanzadas?.recomendaciones_activas || 0,
+          modelos_ia_activos: data.metricas_avanzadas?.modelos_ia_activos || 0,
+        }
+      });
+      
     } catch (error) {
-      console.error('Error:', error);
-      showNotification('❌ Error de conexión', 'error');
+      console.log('⚠️ Error en fetchDashboardData:', error.message || error);
+      
+      setDashboardData({
+        total_plantas: 22,
+        plantas_necesitan_agua: 0,
+        humedad_promedio: '65%',
+        ultima_actualizacion: new Date().toLocaleString(),
+        modo: 'datos_reales',
+        metricas_avanzadas: {
+          plantas_activas: 22,
+          sensores_activos: 7,
+          recomendaciones_activas: 2,
+          modelos_ia_activos: 3,
+        }
+      });
+    } finally {
+      setLoading(false);
     }
-  }, [fetchAIStats, showNotification]);
+  }, []);
 
-  // Función fetchDashboardData - CORREGIDA CON AXIOS
-const fetchDashboardData = useCallback(async () => {
-  try {
-    console.log('🔄 Obteniendo datos del dashboard...');
-    
-    // USAR AXIOS EN LUGAR DE FETCH
-    const response = await API.get('/dashboard/');
-    
-    const data = response.data;
-    console.log('✅ Datos del dashboard obtenidos:', data);
-    
-    // OBTENER EL NÚMERO REAL DE PLANTAS DEL USUARIO
-    let totalPlantasReales = data.total_plantas || 0;
-    
-    try {
-      const plantasResponse = await API.get('/plantas/mis_plantas/');
-      const plantasData = plantasResponse.data;
-      
-      // Determinar el número real de plantas
-      let plantasArray = [];
-      if (plantasData.results && Array.isArray(plantasData.results)) {
-        plantasArray = plantasData.results;
-      } else if (Array.isArray(plantasData)) {
-        plantasArray = plantasData;
-      } else if (plantasData.plantas && Array.isArray(plantasData.plantas)) {
-        plantasArray = plantasData.plantas;
-      }
-      
-      totalPlantasReales = plantasArray.length;
-      console.log(`📊 Número real de plantas del usuario: ${totalPlantasReales}`);
-      
-    } catch (plantasError) {
-      console.warn('⚠️ No se pudo obtener el número real de plantas, usando datos del dashboard:', plantasError.message);
-    }
-    
-    // Combinar datos, usando el número real de plantas
-    setDashboardData({
-      ...data,
-      total_plantas: totalPlantasReales, 
-      total_plantas_original: data.total_plantas, // Guardar el original por si acaso
-      plantas_necesitan_agua: data.plantas_necesitan_agua || 0,
-      humedad_promedio: data.humedad_promedio || '65%',
-      ultima_actualizacion: data.ultima_actualizacion || new Date().toLocaleString(),
-      modo: data.modo || 'datos_reales',
-      metricas_avanzadas: {
-        plantas_activas: totalPlantasReales, // Usar el número real aquí también
-        sensores_activos: data.metricas_avanzadas?.sensores_activos || 0,
-        recomendaciones_activas: data.metricas_avanzadas?.recomendaciones_activas || 0,
-        modelos_ia_activos: data.metricas_avanzadas?.modelos_ia_activos || 0,
-      }
-    });
-    
-  } catch (error) {
-    console.log('⚠️ Error en fetchDashboardData:', error.message || error);
-    
-    setDashboardData({
-      total_plantas: 22, 
-      plantas_necesitan_agua: 0,
-      humedad_promedio: '65%',
-      ultima_actualizacion: new Date().toLocaleString(),
-      modo: 'datos_reales',
-      metricas_avanzadas: {
-        plantas_activas: 22,
-        sensores_activos: 7,
-        recomendaciones_activas: 2,
-        modelos_ia_activos: 3,
-      }
-    });
-  } finally {
-    setLoading(false);
-  }
-}, []);
   // useEffect
   useEffect(() => {
     fetchDashboardData();
@@ -445,9 +234,9 @@ const fetchDashboardData = useCallback(async () => {
 
   if (loading) {
     return (
-      <div className="dashboard">
-        <div className="loadingContainer">
-          <div className="spinner"></div>
+      <div className="db-dashboard-container">
+        <div className="db-loading-screen">
+          <div className="db-spinner-large"></div>
           <p>Cargando datos del dashboard...</p>
         </div>
       </div>
@@ -455,74 +244,104 @@ const fetchDashboardData = useCallback(async () => {
   }
 
   return (
-    <div className="dashboard">
+    <div className="db-dashboard-container">
       {/* Header */}
-      <header className="dashboardHeader">
-        <div className="headerLeft">
-          <div className="logo">
-            <span className="logoIcon">🌱</span>
-            <h1>EcoBox</h1>
+      <header className="db-dashboard-header">
+        <div className="db-header-left">
+          <div className="db-logo">
+            <span className="db-logo-icon">🌱</span>
+            <div className="db-logo-text">
+              <h1 className="db-app-name">EcoBox</h1>
+              <p className="db-app-tagline">Monitoreo inteligente de plantas</p>
+            </div>
           </div>
-          <div className="welcomeSection">
-            <h2>Hola, {user?.nombre || user?.email || 'Usuario'}</h2>
-            <p>Resumen del estado de tus plantas</p>
-            {dashboardData?.modo === 'demo' && (
-              <div className="demoBadge">
-                🚀 Modo Demostración
-              </div>
-            )}
-            {dashboardData?.modo === 'datos_reales' && (
-              <div className="realDataBadge">
-                ✅ Mostrando datos reales
-              </div>
-            )}
+          
+          <div className="db-welcome-section">
+            <h2 className="db-welcome-title">Hola, {user?.nombre || user?.email || 'Usuario'} 👋</h2>
+            <p className="db-welcome-subtitle">Resumen del estado de tus plantas</p>
+            
+            <div className="db-mode-badges">
+              {dashboardData?.modo === 'demo' && (
+                <span className="db-badge db-badge-demo">🚀 Modo Demostración</span>
+              )}
+              {dashboardData?.modo === 'datos_reales' && (
+                <span className="db-badge db-badge-real">✅ Mostrando datos reales</span>
+              )}
+            </div>
           </div>
         </div>
-        <div className="headerRight">
-          <button onClick={handleAskAI} className="aiButton">
-            🤖 Preguntar a la IA
+        
+        <div className="db-header-right">
+          <div className="db-user-info">
+            <div className="db-user-avatar">
+              {user?.nombre?.charAt(0) || 'U'}
+            </div>
+            <div className="db-user-details">
+              <span className="db-user-name">{user?.nombre || user?.email || 'Usuario'}</span>
+              <span className="db-user-role">Usuario EcoBox</span>
+            </div>
+          </div>
+          
+          <button onClick={handleAskAI} className="db-btn-ai">
+            <span className="db-btn-icon">🤖</span>
+            Preguntar a la IA
           </button>
-          <button onClick={logout} className="logoutButton">
+          
+          <button onClick={logout} className="db-btn-logout">
+            <span className="db-btn-icon">🚪</span>
             Cerrar Sesión
           </button>
         </div>
       </header>
 
-      {/* Métricas */}
-      <div className="metricsGrid">         
-        <section className="stat-grid">
+      {/* Métricas Principales */}
+      <div className="db-metrics-section">
+        <div className="db-metrics-grid">
           <MetricCard 
-            icon="🌿" label="Plantas" 
+            icon="🌿" 
+            label="Plantas" 
             value={dashboardData?.total_plantas ?? 0} 
-            trend="En inventario" color="green" 
+            trend="En inventario" 
+            color="green" 
           />
           <MetricCard 
-            icon="📡" label="Sensores" 
+            icon="📡" 
+            label="Sensores" 
             value={dashboardData?.metricas_avanzadas?.sensores_activos ?? 0} 
-            trend="Conectados" color="blue" 
+            trend="Conectados" 
+            color="blue" 
           />
           <MetricCard 
-            icon="💧" label="Sedientas" 
+            icon="💧" 
+            label="Sedientas" 
             value={dashboardData?.plantas_necesitan_agua ?? 0} 
-            trend="Requieren riego" color="orange" 
+            trend="Requieren riego" 
+            color="orange" 
           />
           <MetricCard 
-            icon="🧠" label="IA Precisión" 
+            icon="🧠" 
+            label="IA Precisión" 
             value={aiStats?.statistics?.accuracy_rate ?? '85%'} 
-            trend="Optimizado" color="purple" 
+            trend="Optimizado" 
+            color="purple" 
           />
-        </section>
+        </div>
       </div>
 
-      {/* NUEVA SECCIÓN: CONTROL DE RIEGO POR PLANTA */}
-      
-      <div className="dashboard-layout">
-        <div className="right-column">
-          <div className="wateringControlSection">
-            <div className="sectionHeader">
-              <div className="plantSelector">
-                <h3>🚰 Control de Riego</h3>
-                <label>Seleccionar planta:</label>
+      {/* Layout Principal */}
+      <main className="db-dashboard-content">
+        {/* Columna Izquierda - Contenido Principal */}
+        <div className="db-main-content">
+          {/* Control de Riego */}
+          <div className="db-card db-watering-section">
+            <div className="db-card-header">
+              <h3 className="db-card-title">
+                <span className="db-card-icon">🚰</span>
+                Control de Riego
+              </h3>
+              
+              <div className="db-plant-selector">
+                <label className="db-select-label">Seleccionar planta:</label>
                 <select 
                   value={selectedPlant?.id || ''} 
                   onChange={(e) => {
@@ -532,13 +351,13 @@ const fetchDashboardData = useCallback(async () => {
                       if (plant) {
                         setSelectedPlant({
                           id: plant.id,
-                          nombre: plant.nombrePersonalizado
+                          nombre: plant.nombrePersonalizado,
+                          familia: plant.familia
                         });
-                        console.log(`🌿 Planta seleccionada: ${plant.nombrePersonalizado} (ID: ${plant.id})`);
                       }
                     }
                   }}
-                  className="plantSelect"
+                  className="db-plant-select"
                 >
                   <option value="">Seleccionar planta...</option>
                   {availablePlants.map(plant => (
@@ -546,103 +365,155 @@ const fetchDashboardData = useCallback(async () => {
                       key={`plant-${plant.id}`}
                       value={plant.id}
                     >
-                      {plant.nombrePersonalizado} ({plant.especie})
+                      {plant.nombrePersonalizado} {plant.familia ? `(${plant.familia})` : ''}
                     </option>
                   ))}
                 </select>
               </div>
             </div>
             
-            {selectedPlant ? (
-              <div className="wateringControlContainer">
+            <div className="db-card-body">
+              {selectedPlant ? (
                 <WateringControl 
                   plantId={selectedPlant.id}
                   plantName={selectedPlant.nombre}
                 />
-              </div>
-            ) : (
-              <div className="noPlantSelected">
-                <p>Selecciona una planta para ver el control de riego</p>
-              </div>
-            )}
-          </div>
-
-          {/* SECCIÓN DE GRÁFICOS */}
-          <div className="chartsSection">
-            {/* Gráfico en tiempo real */}
-            <div className="chartCard fullWidth">
-              <RealTimeHumidityChart />
-            </div>
-          </div>
-        </div>
-
-        <div className="left-column">
-          {/* Widget de Alertas */}
-          <div className="alertsSection">
-            <AlertsWidget />
-          </div>
-
-          {/* Alertas del dashboard */}
-          {(dashboardData?.plantas_necesitan_agua > 0 || dashboardData?.metricas_avanzadas?.recomendaciones_activas > 0) && (
-            <div className="alertsSection">
-              <div className="alertCard">
-                <div className="alertHeader">
-                  <div className="alertIcon">🚨</div>
-                  <div>
-                    <h4>Acciones Recomendadas</h4>
-                    <p>Revisa las siguientes plantas que requieren atención</p>
+              ) : (
+                <div className="db-no-plant-selected">
+                  <div className="db-empty-state">
+                    <span className="db-empty-icon">🌿</span>
+                    <h4>Selecciona una planta</h4>
+                    <p>Elige una planta de la lista para ver el control de riego</p>
                   </div>
                 </div>
-                <div className="alertActions">
-                  <button className="primaryButton">Ver Detalles</button>
-                  <button className="secondaryButton">Ignorar</button>
+              )}
+            </div>
+          </div>
+
+          {/* Gráficos */}
+          <div className="db-card db-charts-section">
+            <div className="db-card-header">
+              <h3 className="db-card-title">
+                <span className="db-card-icon">📊</span>
+                Monitoreo en Tiempo Real
+              </h3>
+              <div className="db-card-actions">
+                {selectedPlant && (
+                  <span className="db-current-plant">
+                    🌿 {selectedPlant.nombre}
+                  </span>
+                )}
+              </div>
+            </div>
+            
+            <div className="db-card-body">
+              <RealTimeHumidityChart 
+                plantId={selectedPlant?.id}
+                plantName={selectedPlant?.nombre}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Columna Derecha - Sidebar */}
+        <aside className="db-sidebar">
+          {/* Widget de Alertas */}
+          <div className="db-card db-alerts-widget">
+            <div className="db-card-header">
+              <h3 className="db-card-title">
+                <span className="db-card-icon">🔔</span>
+                Alertas Activas
+              </h3>
+              <button className="db-btn-refresh" onClick={fetchDashboardData}>
+                🔄
+              </button>
+            </div>
+            <div className="db-card-body">
+              <AlertsWidget />
+            </div>
+          </div>
+
+          {/* Widget de IA */}
+          <div className="db-card db-ai-widget">
+            <div className="db-card-header">
+              <h3 className="db-card-title">
+                <span className="db-card-icon">🤖</span>
+                Asistente IA
+              </h3>
+            </div>
+            <div className="db-card-body">
+              <AIWidget />
+            </div>
+          </div>
+
+          {/* Estadísticas del Sistema */}
+          <div className="db-card db-system-stats">
+            <div className="db-card-header">
+              <h3 className="db-card-title">
+                <span className="db-card-icon">⚙️</span>
+                Estado del Sistema
+              </h3>
+            </div>
+            <div className="db-card-body">
+              <div className="db-system-metrics">
+                <div className="db-system-metric">
+                  <span className="db-metric-label">Actualización</span>
+                  <span className="db-metric-value">
+                    {dashboardData?.ultima_actualizacion || 'Hace unos momentos'}
+                  </span>
+                </div>
+                <div className="db-system-metric">
+                  <span className="db-metric-label">Sensores</span>
+                  <span className={`db-metric-value ${dashboardData?.metricas_avanzadas?.sensores_activos > 0 ? 'db-status-active' : 'db-status-inactive'}`}>
+                    {dashboardData?.metricas_avanzadas?.sensores_activos > 0 ? '✅ Activos' : '❌ Inactivos'}
+                  </span>
+                </div>
+                <div className="db-system-metric">
+                  <span className="db-metric-label">IA EcoBox</span>
+                  <span className="db-metric-value db-status-active">
+                    ✅ {aiStats?.status === 'active' ? 'Operativa' : 'Inactiva'}
+                  </span>
                 </div>
               </div>
             </div>
-          )}
-
-          {/* Botón de recarga para modo demo */}
-          {dashboardData?.modo === 'demo' && (
-            <div className="demoActions">
-              <button onClick={fetchDashboardData} className="refreshButton">
-                🔄 Actualizar Datos
-              </button>
-              <p className="demoHint">
-                💡 Ejecuta el script de datos de prueba para ver datos reales
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
+          </div>
+        </aside>
+      </main>
 
       {/* Footer */}
-      <footer className="dashboardFooter">
-        <p>
-          Última actualización: {dashboardData?.ultima_actualizacion || 'Cargando...'}
-          {dashboardData?.modo === 'demo' && ' (Modo Demo)'}
-        </p>
-        <p className="systemStatus">
-          Sistema de riego: <span className="statusActive">✅ OPERATIVO</span> | 
-          IA: <span className="statusActive">✅ {aiStats?.status?.toUpperCase() || 'ACTIVO'}</span>
-        </p>
+      <footer className="db-dashboard-footer">
+        <div className="db-footer-content">
+          <p className="db-update-time">
+            <span className="db-footer-icon">🕒</span>
+            Última actualización: {dashboardData?.ultima_actualizacion || 'Cargando...'}
+          </p>
+          <p className="db-system-status">
+            Sistema de riego: <span className="db-status-active">✅ OPERATIVO</span> | 
+            IA EcoBox: <span className="db-status-active">✅ {aiStats?.status?.toUpperCase() || 'ACTIVO'}</span>
+          </p>
+        </div>
       </footer>
 
       {/* Chatbot Modal */}
       {showChatbot && (
-        <div className="chatbotModalOverlay">
-          <div className="chatbotModal">
-            <div className="chatbotHeader">
-              <div className="chatbotTitle">
-                <span className="chatbotIcon">🤖</span>
+        <div className="db-chatbot-modal-overlay">
+          <div className="db-chatbot-modal">
+            <div className="db-chatbot-header">
+              <div className="db-chatbot-title">
+                <span className="db-chatbot-icon">🤖</span>
                 <h3>Asistente IA EcoBox</h3>
               </div>
-              <button onClick={handleCloseChatbot} className="closeButton">
+              <button onClick={handleCloseChatbot} className="db-btn-close">
                 ×
               </button>
             </div>
-            <div className="chatbotContent">
-              <p>Próximamente: Chatbot de IA integrado</p>
-              <p>Puedes acceder al asistente completo en <a href="/ai/chat">/ai/chat</a></p>
+            <div className="db-chatbot-content">
+              <div className="db-chatbot-placeholder">
+                <span className="db-placeholder-icon">🚀</span>
+                <h4>Chatbot en Desarrollo</h4>
+                <p>Próximamente: Chatbot de IA integrado para recomendaciones personalizadas</p>
+                <p>Puedes acceder al asistente completo en <a href="/ai/chat" className="db-chat-link">/ai/chat</a></p>
+              </div>
             </div>
           </div>
         </div>
@@ -651,13 +522,18 @@ const fetchDashboardData = useCallback(async () => {
   );
 };
 
+// Componente MetricCard actualizado
 const MetricCard = ({ icon, label, value, trend, color }) => (
-  <div className={`metric-item-card ${color}`}>
-    <div className="metric-icon-box">{icon}</div>
-    <div className="metric-data">
-      <span className="metric-label">{label}</span>
-      <span className="metric-value">{value}</span>
-      <span className="metric-trend">{trend}</span>
+  <div className={`db-metric-card db-metric-${color}`}>
+    <div className="db-metric-icon-container">
+      <span className="db-metric-icon">{icon}</span>
+    </div>
+    <div className="db-metric-info">
+      <h4 className="db-metric-label">{label}</h4>
+      <div className="db-metric-value-container">
+        <span className="db-metric-value">{value}</span>
+        <span className="db-metric-trend">{trend}</span>
+      </div>
     </div>
   </div>
 );
